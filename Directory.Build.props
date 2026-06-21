@@ -1,0 +1,22 @@
+<Project>
+
+	<!-- General -->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+
+	<!-- Code quality -->
+	<PropertyGroup>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>NU1901,NU1902,NU1903</WarningsNotAsErrors>
+	</PropertyGroup>
+
+	<!-- Release code quality -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	</PropertyGroup>
+
+</Project>
