@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- General -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
+    </PropertyGroup>
+
+    <!-- Code quality -->
+    <PropertyGroup>
+        <NoWarn>CA1859,IDE0039</NoWarn>
+    </PropertyGroup>
+
+    <!-- Package references -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+        <PackageReference Include="xunit.v3" Version="3.2.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <!-- Project references -->
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
+    </ItemGroup>
+
+    <!-- Pre-test build steps -->
+    <Target Name="PublishNativeLibrary" BeforeTargets="Test" Condition="'$(OS)' == 'Unix'">
+        <Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(OutputPath)" />
+    </Target>
+
+</Project>
