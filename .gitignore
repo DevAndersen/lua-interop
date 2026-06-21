@@ -480,3 +480,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+### Custom
+
+# .so library file
+*.so
+*.so.dbg

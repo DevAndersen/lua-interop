@@ -3,10 +3,13 @@
     <!-- General -->
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AssemblyName>luainterop</AssemblyName>
     </PropertyGroup>
 
     <!-- Native AOT -->
     <PropertyGroup>
+        <PublishAot>true</PublishAot>
+        <NativeLib>Shared</NativeLib>
         <IsAotCompatible>true</IsAotCompatible>
         <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     </PropertyGroup>

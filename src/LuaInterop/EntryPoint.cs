@@ -1,16 +1,25 @@
 using System.Runtime.InteropServices;
+using System.Text;
 using LuaInterop.Native;
 
 namespace LuaInterop;
 
-public static class EntryPoint
+public static unsafe class EntryPoint
 {
-    [UnmanagedCallersOnly(EntryPoint = "luaopen_dotnetinterop")]
+    [UnmanagedCallersOnly(EntryPoint = "luaopen_luainterop")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
     public static int LuaOpen(nint luaState)
     {
-        Lua.lua_createtable(luaState, 0, 1);
-        //RegisterFunction(luaState, "sayMessage", &SayMessage);
+        Lua.CreateTable(luaState, 0, 1);
+        RegisterFunction(luaState, "sayMessage", &SayMessage);
         return 1;
+    }
+
+    private static void RegisterFunction(nint luaStatePtr, string functionName, delegate* unmanaged<nint, int> functionPointer)
+    {
+        const int stackIndex = -2;
+
+        Lua.PushCClosure(luaStatePtr, (nint)functionPointer, 0);
+        Lua.SetField(luaStatePtr, stackIndex, functionName);
     }
 
     [UnmanagedCallersOnly]
@@ -22,7 +31,7 @@ public static class EntryPoint
         string message = $"You said: {arg1}";
 
         // Push output string onto the stack.
-        Lua.lua_pushstring(luaStatePtr, message);
+        Lua.PushString(luaStatePtr, message);
 
         // Return the number of pushed values.
         return 1;
@@ -30,7 +39,14 @@ public static class EntryPoint
 
     private static string ReadStringArg(nint luaStatePtr, int argumentIndex)
     {
-        nint argumentPtr = Lua.luaL_checklstring(luaStatePtr, argumentIndex, out nuint length);
-        return Marshal.PtrToStringUTF8(argumentPtr, (int)length);
+        byte* ptr = Lua.CheckLString(luaStatePtr, argumentIndex, out nuint length);
+
+        if (ptr == null)
+        {
+            throw new Exception();
+        }
+
+        Span<byte> bytes = new Span<byte>(ptr, (int)length);
+        return Encoding.UTF8.GetString(bytes);
     }
 }
