@@ -5,5 +5,5 @@ local interop = require("luainteropdemo")
 local result = interop.returnInteger()
 
 -- Assert
-assert(type(result) == "integer")
+assert(math.type(result) == "integer")
 assert(result == 42)
