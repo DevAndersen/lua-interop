@@ -12,14 +12,19 @@ public static unsafe class EntryPoint
         const int tableIndex = 1;
 
         Lua.CreateTable(luaState, 0, 7);
-        
+
         RegisterFunction(luaState, "sayMessage", &SayMessage);
+
         RegisterFunction(luaState, "returnString", &ReturnString);
         RegisterFunction(luaState, "returnBooleanTrue", &ReturnBooleanTrue);
         RegisterFunction(luaState, "returnBooleanFalse", &ReturnBooleanFalse);
         RegisterFunction(luaState, "returnInteger", &ReturnInteger);
         RegisterFunction(luaState, "returnNumber", &ReturnNumber);
         RegisterFunction(luaState, "returnNull", &ReturnNull);
+
+        RegisterFunction(luaState, "readReturnString", &ReadReturnString);
+        RegisterFunction(luaState, "readReturnInteger", &ReadReturnInteger);
+        RegisterFunction(luaState, "readReturnNumber", &ReadReturnNumber);
 
         return tableIndex;
     }
@@ -89,6 +94,30 @@ public static unsafe class EntryPoint
         return 1;
     }
 
+    [UnmanagedCallersOnly]
+    private static int ReadReturnString(nint luaStatePtr)
+    {
+        string arg = ReadStringArg(luaStatePtr, 1);
+        Lua.PushString(luaStatePtr, arg);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReadReturnInteger(nint luaStatePtr)
+    {
+        long arg = ReadIntegerArg(luaStatePtr, 1);
+        Lua.PushInteger(luaStatePtr, arg);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReadReturnNumber(nint luaStatePtr)
+    {
+        double arg = ReadNumberArg(luaStatePtr, 1);
+        Lua.PushNumber(luaStatePtr, arg);
+        return 1;
+    }
+
     private static string ReadStringArg(nint luaStatePtr, int argumentIndex)
     {
         byte* ptr = Lua.CheckLString(luaStatePtr, argumentIndex, out nuint length);
@@ -100,5 +129,15 @@ public static unsafe class EntryPoint
 
         Span<byte> bytes = new Span<byte>(ptr, (int)length);
         return Encoding.UTF8.GetString(bytes);
+    }
+
+    private static long ReadIntegerArg(nint luaStatePtr, int argumentIndex)
+    {
+        return Lua.CheckInteger(luaStatePtr, argumentIndex);
+    }
+
+    private static double ReadNumberArg(nint luaStatePtr, int argumentIndex)
+    {
+        return Lua.CheckNumber(luaStatePtr, argumentIndex);
     }
 }
