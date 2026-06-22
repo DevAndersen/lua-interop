@@ -2,7 +2,7 @@ using Xunit;
 
 namespace LuaInterop.Tests;
 
-public class InteropTests
+public class ReturnTests
 {
     [Fact]
     public async Task ReturnString_ReturnsExpectedString()
