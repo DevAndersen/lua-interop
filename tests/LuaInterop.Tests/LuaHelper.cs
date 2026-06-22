@@ -34,7 +34,7 @@ public static class LuaHelper
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            WorkingDirectory = "../../../scripts"
+            WorkingDirectory = "../../../scripts" // Path of scripts directory, relative to the test executable.
         });
 
         if (process == null)
