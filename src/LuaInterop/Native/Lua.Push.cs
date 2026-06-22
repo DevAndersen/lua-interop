@@ -19,4 +19,18 @@ public static unsafe partial class Lua
     public static partial void PushBoolean(
         lua_State L,
         [MarshalAs(UnmanagedType.Bool)] bool b);
+
+    [LibraryImport(Library, EntryPoint = "lua_pushinteger")]
+    public static partial void PushInteger(
+        lua_State L,
+        lua_Integer n);
+
+    [LibraryImport(Library, EntryPoint = "lua_pushnumber")]
+    public static partial void PushNumber(
+        lua_State L,
+        lua_Number  n);
+
+    [LibraryImport(Library, EntryPoint = "lua_pushnil")]
+    public static partial void PushNil(
+        lua_State L);
 }

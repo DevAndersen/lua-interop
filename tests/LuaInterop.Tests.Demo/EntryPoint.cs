@@ -11,12 +11,15 @@ public static unsafe class EntryPoint
     {
         const int tableIndex = 1;
 
-        Lua.CreateTable(luaState, 0, 4);
+        Lua.CreateTable(luaState, 0, 7);
         
         RegisterFunction(luaState, "sayMessage", &SayMessage);
         RegisterFunction(luaState, "returnString", &ReturnString);
         RegisterFunction(luaState, "returnBooleanTrue", &ReturnBooleanTrue);
         RegisterFunction(luaState, "returnBooleanFalse", &ReturnBooleanFalse);
+        RegisterFunction(luaState, "returnInteger", &ReturnInteger);
+        RegisterFunction(luaState, "returnNumber", &ReturnNumber);
+        RegisterFunction(luaState, "returnNull", &ReturnNull);
 
         return tableIndex;
     }
@@ -62,6 +65,27 @@ public static unsafe class EntryPoint
     private static int ReturnBooleanFalse(nint luaStatePtr)
     {
         Lua.PushBoolean(luaStatePtr, false);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnInteger(nint luaStatePtr)
+    {
+        Lua.PushInteger(luaStatePtr, 42);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnNumber(nint luaStatePtr)
+    {
+        Lua.PushNumber(luaStatePtr, 123.456);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnNull(nint luaStatePtr)
+    {
+        Lua.PushNil(luaStatePtr);
         return 1;
     }
 
