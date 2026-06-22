@@ -8,16 +8,16 @@ public static class LuaHelper
 {
     public static async Task<string> RunScriptAsync([CallerMemberName] string scriptFile = "", int timeoutInSeconds = 3)
     {
-        (int exitCode, string standardOutput, string standardError) = await RunLuaScriptAsync(scriptFile, timeoutInSeconds);
+        ProcessResult processResult = await RunLuaScriptAsync(scriptFile, timeoutInSeconds);
 
-        Console.WriteLine(standardOutput);
+        Console.WriteLine(processResult.StandardOutput);
 
-        if (exitCode != 0 || standardError.Length > 0)
+        if (!processResult.IsSuccessful)
         {
-            Assert.Fail($"Lua script exited with code {exitCode}: {standardError}");
+            Assert.Fail($"Lua script exited with code {processResult.ExitCode}: {processResult.StandardError}");
         }
 
-        return standardOutput;
+        return processResult.StandardOutput;
     }
     
     public static async Task<ProcessResult> RunScriptResultAsync([CallerMemberName] string scriptFile = "", int timeoutInSeconds = 3)
