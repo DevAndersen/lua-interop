@@ -9,9 +9,16 @@ public static unsafe class EntryPoint
     [UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
     public static int LuaOpen(nint luaState)
     {
-        Lua.CreateTable(luaState, 0, 1);
+        const int tableIndex = 1;
+
+        Lua.CreateTable(luaState, 0, 4);
+        
         RegisterFunction(luaState, "sayMessage", &SayMessage);
-        return 1;
+        RegisterFunction(luaState, "returnString", &ReturnString);
+        RegisterFunction(luaState, "returnBooleanTrue", &ReturnBooleanTrue);
+        RegisterFunction(luaState, "returnBooleanFalse", &ReturnBooleanFalse);
+
+        return tableIndex;
     }
 
     private static void RegisterFunction(nint luaStatePtr, string functionName, delegate* unmanaged<nint, int> functionPointer)
@@ -34,6 +41,27 @@ public static unsafe class EntryPoint
         Lua.PushString(luaStatePtr, message);
 
         // Return the number of pushed values.
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnString(nint luaStatePtr)
+    {
+        Lua.PushString(luaStatePtr, "Hello, World!");
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnBooleanTrue(nint luaStatePtr)
+    {
+        Lua.PushBoolean(luaStatePtr, true);
+        return 1;
+    }
+
+    [UnmanagedCallersOnly]
+    private static int ReturnBooleanFalse(nint luaStatePtr)
+    {
+        Lua.PushBoolean(luaStatePtr, false);
         return 1;
     }
 

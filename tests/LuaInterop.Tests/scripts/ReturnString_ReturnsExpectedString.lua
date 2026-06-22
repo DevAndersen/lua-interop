@@ -2,7 +2,8 @@
 local interop = require("luainteropdemo")
 
 -- Act
-local result = interop.sayMessage("Hello, World!")
+local result = interop.returnString()
 
 -- Assert
 assert(type(result) == "string")
+assert(result == "Hello, World!")
