@@ -29,8 +29,8 @@
     </ItemGroup>
 
     <!-- Pre-test build steps -->
-    <Target Name="PublishNativeLibrary" BeforeTargets="Test" Condition="'$(OS)' == 'Unix'">
-        <Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(OutputPath)" />
+    <Target Name="PublishNativeLibrary" BeforeTargets="Build" Condition="'$(OS)' == 'Unix'">
+        <Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(MSBuildProjectDirectory)/scripts" />
     </Target>
 
 </Project>
