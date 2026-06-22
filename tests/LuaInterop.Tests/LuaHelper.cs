@@ -14,7 +14,7 @@ public static class LuaHelper
 
         if (exitCode != 0 || standardError.Length > 0)
         {
-            Assert.Fail($"Lua exited with code {exitCode}: {standardError}");
+            Assert.Fail($"Lua script exited with code {exitCode}: {standardError}");
         }
 
         return standardOutput;
