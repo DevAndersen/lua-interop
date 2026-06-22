@@ -61,6 +61,6 @@ public static class LuaHelper
 
     public record ProcessResult(int ExitCode, string StandardOutput, string StandardError)
     {
-        public bool IsSuccessful => ExitCode == 0 && StandardError.Length > 0;
+        public bool IsSuccessful => ExitCode == 0 && StandardError.Length == 0;
     }
 }
