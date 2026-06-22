@@ -10,7 +10,7 @@ using lua_Number = double;
 
 namespace LuaInterop.Native;
 
-internal static unsafe partial class Lua
+public static unsafe partial class Lua
 {
     private const string Library = "lua";
 

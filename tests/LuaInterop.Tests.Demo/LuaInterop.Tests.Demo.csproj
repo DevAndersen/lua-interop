@@ -3,6 +3,7 @@
     <!-- General -->
     <PropertyGroup>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AssemblyName>luainteropdemo</AssemblyName>
     </PropertyGroup>
 
     <!-- Native AOT -->
@@ -12,5 +13,10 @@
         <IsAotCompatible>true</IsAotCompatible>
         <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     </PropertyGroup>
+
+    <!-- Project references -->
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
+    </ItemGroup>
 
 </Project>

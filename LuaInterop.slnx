@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="src/LuaInterop/LuaInterop.csproj" />
   <Project Path="tests/LuaInterop.Tests/LuaInterop.Tests.csproj" />
+  <Project Path="tests/LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
 </Solution>

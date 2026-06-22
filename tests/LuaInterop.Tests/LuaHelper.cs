@@ -30,10 +30,11 @@ public static class LuaHelper
         Process? process = Process.Start(new ProcessStartInfo
         {
             FileName = "lua",
-            Arguments = $"../../../scripts/{scriptFile}.lua",
+            Arguments = $"{scriptFile}.lua",
             UseShellExecute = false,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            WorkingDirectory = "../../../scripts"
         });
 
         if (process == null)

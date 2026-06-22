@@ -2,11 +2,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using LuaInterop.Native;
 
-namespace LuaInterop;
+namespace LuaInterop.Tests.Demo;
 
 public static unsafe class EntryPoint
 {
-    [UnmanagedCallersOnly(EntryPoint = "luaopen_luainterop")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
+    [UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
     public static int LuaOpen(nint luaState)
     {
         Lua.CreateTable(luaState, 0, 1);
@@ -43,7 +43,7 @@ public static unsafe class EntryPoint
 
         if (ptr == null)
         {
-            throw new Exception();
+            throw new Exception(); // Todo: Throw an appropriate exception with message.
         }
 
         Span<byte> bytes = new Span<byte>(ptr, (int)length);

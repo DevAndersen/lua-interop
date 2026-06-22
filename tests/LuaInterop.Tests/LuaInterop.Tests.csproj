@@ -25,7 +25,7 @@
 
     <!-- Project references -->
     <ItemGroup>
-      <ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
+      <ProjectReference Include="../LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
     </ItemGroup>
 
     <!-- Pre-test build steps -->

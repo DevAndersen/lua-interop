@@ -1,5 +1,5 @@
 -- Arrange
-local interop = require("luainterop")
+local interop = require("luainteropdemo")
 
 -- Act
 local result = interop.sayMessage("Hello, World!")
