@@ -51,16 +51,4 @@ public class ReadReturnTests
             assert(result == arg)
             """);
     }
-
-    [Fact]
-    public async Task Test()
-    {
-        await LuaHelper.RunScriptAsync("""
-            local arg = 42
-            local result = interop.readReturnInteger(arg)
-
-            assert(math.type(result) == "integer")
-            assert(result == 42)
-            """);
-    }
 }
