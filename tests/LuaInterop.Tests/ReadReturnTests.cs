@@ -21,4 +21,26 @@ public class ReadReturnTests
     {
         await LuaHelper.RunScriptAsync();
     }
+
+    [Fact]
+    public async Task Test()
+    {
+        string script = """
+            local interop = require("luainteropdemo")
+            
+            local arg = 42
+            local result = interop.readReturnInteger(arg)
+            
+            assert(math.type(result) == "integer")
+            assert(result == 43)
+            """;
+
+        LuaHelper.ProcessResult processResult = await LuaHelper.RunLuaInlineScriptAsync(script);
+
+
+        if (!processResult.IsSuccessful)
+        {
+            Assert.Fail($"Lua script exited with code {processResult.ExitCode}: {processResult.StandardError}");
+        }
+    }
 }
