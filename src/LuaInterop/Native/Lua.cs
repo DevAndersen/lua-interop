@@ -8,7 +8,11 @@ namespace LuaInterop.Native;
 
 public static unsafe partial class Lua
 {
+#if WINDOWS
+    private const string Library = "lua55.dll";
+#else
     private const string Library = "lua";
+#endif
 
     [LibraryImport(Library, EntryPoint = "lua_createtable")]
     public static partial void CreateTable(

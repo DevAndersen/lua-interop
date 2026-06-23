@@ -32,5 +32,8 @@
     <Target Name="PublishNativeLibrary" BeforeTargets="Build" Condition="'$(OS)' == 'Unix'">
         <Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(MSBuildProjectDirectory)/scripts" />
     </Target>
+	<Target Name="PublishNativeLibrary" BeforeTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+		<Exec Command="powershell $(MSBuildProjectDirectory)\build.ps1 $(MSBuildProjectDirectory)\scripts" />
+	</Target>
 
 </Project>

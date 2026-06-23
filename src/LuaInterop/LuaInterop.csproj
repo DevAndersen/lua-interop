@@ -13,4 +13,9 @@
         <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
     </PropertyGroup>
 
+	  <!-- Define Windows constant -->
+	  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	  </PropertyGroup>
+
 </Project>
