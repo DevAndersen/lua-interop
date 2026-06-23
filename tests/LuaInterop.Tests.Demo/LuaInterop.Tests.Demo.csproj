@@ -17,6 +17,7 @@
     <!-- Project references -->
     <ItemGroup>
       <ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
+			<ProjectReference Include="..\..\src\LuaInterop.SourceGen\LuaInterop.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
 </Project>
