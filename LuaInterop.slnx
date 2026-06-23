@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="src/LuaInterop/LuaInterop.csproj" />
   <Project Path="tests/LuaInterop.Tests/LuaInterop.Tests.csproj" />
   <Project Path="tests/LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
