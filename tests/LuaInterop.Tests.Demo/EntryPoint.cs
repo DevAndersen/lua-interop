@@ -3,7 +3,7 @@ using System.Text;
 using LuaInterop.Attributes;
 using LuaInterop.Native;
 
-[assembly: LuaOpen]
+[assembly: LuaOpen(Number = 12)]
 
 namespace LuaInterop.Tests.Demo;
 
@@ -12,7 +12,8 @@ public static unsafe class EntryPoint
     [UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
     public static int LuaOpen(nint luaState)
     {
-        global::Demo.luainteropdemo.Generated.SayHello();
+        global::Demo.Marker.luainteropdemo.Generated2.SayHello();
+
         const int tableIndex = 1;
 
         Lua.CreateTable(luaState, 0, 7);
@@ -39,6 +40,18 @@ public static unsafe class EntryPoint
 
         Lua.PushCClosure(luaStatePtr, (nint)functionPointer, 0);
         Lua.SetField(luaStatePtr, stackIndex, functionName);
+    }
+
+    [LuaFunction]
+    public static void DoWork1()
+    {
+        Console.WriteLine("Work 1 being done");
+    }
+
+    [LuaFunction]
+    public static void DoWork2()
+    {
+        Console.WriteLine("Work 2 being done");
     }
 
     [UnmanagedCallersOnly]
