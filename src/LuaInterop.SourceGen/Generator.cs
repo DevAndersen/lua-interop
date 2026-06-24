@@ -9,40 +9,49 @@ internal class Generator : IIncrementalGenerator
 {
     private const string _luaOpenAttributeFullName = "LuaInterop.Attributes.LuaOpenAttribute";
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
+    private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Check for assembly attribute.
-        IncrementalValueProvider<(IAssemblySymbol, INamedTypeSymbol)> isMarkedAssembly = context.CompilationProvider.Select((compilation, _) =>
+        // Gather compilation data.
+        IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select((compilation, _) =>
         {
-            INamedTypeSymbol? attributeTypeSymbol = compilation.GetTypeByMetadataName(_luaOpenAttributeFullName);
-
-            if (attributeTypeSymbol == null)
+            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaOpenAttributeFullName);
+            if (assemblyAttributeTypeSymbol == null)
             {
                 return default;
             }
 
-            return (compilation.Assembly, attributeTypeSymbol);
+            INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaFunctionAttributeFullName);
+            if (methodAttributeTypeSymbol == null)
+            {
+                return default;
+            }
+
+            return new CompilationData(compilation.Assembly, assemblyAttributeTypeSymbol, methodAttributeTypeSymbol);
         });
 
         // Check for method attributes.
-        IncrementalValuesProvider<ISymbol> methods = context.SyntaxProvider.ForAttributeWithMetadataName(
+        IncrementalValuesProvider<ISymbol> methodProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
             _luaFunctionAttributeFullName,
             static (syntaxNode, _) => syntaxNode is MethodDeclarationSyntax,
             static (syntaxContext, _) => syntaxContext.TargetSymbol);
 
         // Group methods and pair them with the assembly.
-        IncrementalValueProvider<(ImmutableArray<ISymbol> methods, (IAssemblySymbol, INamedTypeSymbol) Right)> provider = methods.Collect().Combine(isMarkedAssembly);
+        IncrementalValueProvider<(ImmutableArray<ISymbol> methods, CompilationData compilationData)> provider = methodProvider.Collect().Combine(compilationDataProvider);
 
-        context.RegisterSourceOutput(provider, static (ctx, compilation) =>
+        context.RegisterSourceOutput(provider, (ctx, data) =>
         {
-            (ImmutableArray<ISymbol> symbols, (IAssemblySymbol Assembly, INamedTypeSymbol Attribute) assemblyData) = compilation;
-            if (assemblyData.Assembly == null)
+            // Deconstruct.
+            (ImmutableArray<ISymbol> symbols, CompilationData compilationData) = data;
+            (IAssemblySymbol assembly, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute) = compilationData;
+
+            if (assembly == null)
             {
                 return;
             }
 
-            var matchingAttribute = GetAttributeData(assemblyData.Assembly, assemblyData.Attribute);
+            var matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
             if (matchingAttribute == null)
             {
                 return;
@@ -50,17 +59,26 @@ internal class Generator : IIncrementalGenerator
 
             string str = TryGetAttributeNamedArgument(matchingAttribute, "Number", out int value) ? value.ToString() : "FAILED";
 
+            string abc(ISymbol symbol)
+            {
+                if (TryGetAttributeValue(symbol, methodAttribute, _luaFunctionAttributeNameArgumentName, out string? abc))
+                {
+                    return abc ?? "NULL";
+                }
+                return "FALSE";
+            }
+
             // language=c#
             string src = $$"""
-                namespace Demo.Marker.{{assemblyData.Assembly.Name}};
+                namespace Demo.Marker.{{assembly.Name}};
 
                 /*
-                > {{assemblyData.Attribute.Name}} : {{str}}
-                > {{assemblyData.Assembly.Name}}
+                > {{assemblyAttribute.Name}} : {{str}}
+                > {{assembly.Name}}
                 */
 
                 /*
-                {{string.Join("\r\n", symbols.Select(x => x.Name))}}
+                {{string.Join("\r\n", symbols.Select(x => abc(x)))}}
                 */
 
                 public static class Generated2
@@ -72,8 +90,20 @@ internal class Generator : IIncrementalGenerator
                 }
                 """;
 
-            ctx.AddSource($"{assemblyData.Assembly.Name}.Test2.g.cs", src);
+            ctx.AddSource($"{compilationData.Assembly.Name}.Test2.g.cs", src);
         });
+    }
+
+    private static bool TryGetAttributeValue<T>(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, string argumentName, out T? value)
+    {
+        var matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
+        if (matchingAttribute == null)
+        {
+            value = default;
+            return false;
+        }
+
+        return TryGetAttributeNamedArgument(matchingAttribute, argumentName, out value);
     }
 
     private static AttributeData? GetAttributeData(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol)
@@ -94,4 +124,6 @@ internal class Generator : IIncrementalGenerator
         value = default;
         return false;
     }
+
+    private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
 }
