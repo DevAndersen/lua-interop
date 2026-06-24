@@ -46,12 +46,12 @@ internal class Generator : IIncrementalGenerator
             (ImmutableArray<ISymbol> symbols, CompilationData compilationData) = data;
             (IAssemblySymbol assembly, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute) = compilationData;
 
-            if (assembly == null)
+            if (compilationData == default)
             {
                 return;
             }
 
-            var matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
+            AttributeData? matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
             if (matchingAttribute == null)
             {
                 return;
@@ -96,7 +96,7 @@ internal class Generator : IIncrementalGenerator
 
     private static bool TryGetAttributeValue<T>(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, string argumentName, out T? value)
     {
-        var matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
+        AttributeData? matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
         if (matchingAttribute == null)
         {
             value = default;
