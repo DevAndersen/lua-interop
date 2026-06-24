@@ -1,11 +1,14 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Xunit;
 
 namespace LuaInterop.Tests;
 
 public static class LuaHelper
 {
-    public static async Task<string> RunScriptAsync(string script, int timeoutInSeconds = 3)
+    private const string _luaSyntaxName = "Lua";
+
+    public static async Task<string> RunScriptAsync([StringSyntax(_luaSyntaxName)] string script, int timeoutInSeconds = 3)
     {
         ProcessResult processResult = await RunLuaScriptResultAsync(script, timeoutInSeconds);
 
@@ -19,7 +22,7 @@ public static class LuaHelper
         return processResult.StandardOutput;
     }
 
-    public static async Task<ProcessResult> RunLuaScriptResultAsync(string script, int timeoutInSeconds = 3)
+    public static async Task<ProcessResult> RunLuaScriptResultAsync([StringSyntax(_luaSyntaxName)] string script, int timeoutInSeconds = 3)
     {
         string fullScript = $"""
             local interop = require("luainteropdemo")
