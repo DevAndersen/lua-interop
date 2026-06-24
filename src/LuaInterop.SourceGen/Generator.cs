@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace LuaInterop.SourceGen;
 
@@ -91,6 +93,10 @@ internal class Generator : IIncrementalGenerator
                 """;
 
             ctx.AddSource($"{compilationData.Assembly.Name}.Test2.g.cs", src);
+
+            CompilationUnitSyntax compilationUnit = Test().NormalizeWhitespace();
+            SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
+            ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText());
         });
     }
 
@@ -123,6 +129,48 @@ internal class Generator : IIncrementalGenerator
 
         value = default;
         return false;
+    }
+
+    private static CompilationUnitSyntax Test()
+    {
+        ParameterSyntax parameter = SF
+            .Parameter(SF.Identifier("luaState"))
+            .WithType(SF.IdentifierName("global::System.IntPtr"));
+
+        SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList<ParameterSyntax>().Add(parameter);
+
+        SF.TokenList(SF.Token(SyntaxKind.ConstKeyword));
+        SF.VariableDeclaration(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)));
+
+        SF.VariableDeclarator("asdf");
+
+        //LocalDeclarationStatementSyntax variable = SF.LocalDeclarationStatement(SF.TokenList(SF.Token(SyntaxKind.ConstKeyword)), SF.VariableDeclaration(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)), SF.SeparatedList<VariableDeclaratorSyntax>().Add(SF.VariableDeclarator("asdf"))));
+
+        ReturnStatementSyntax returnStatement = SF.ReturnStatement(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
+            .WithTrailingTrivia(SF.Comment("// Stack index of table"));
+
+        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>().AddRange([returnStatement]);
+
+        BlockSyntax block = SF.Block(statementList);
+
+        MethodDeclarationSyntax methodDeclaration =  SF.MethodDeclaration(
+            SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
+            SF.Identifier("LuaOpen"))
+            .WithModifiers(SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword)))
+            .WithParameterList(SF.ParameterList(parameterSyntaxList))
+            .WithBody(block);
+
+        SyntaxTokenList classAccessModifierSyntax = SF.TokenList(SF.Token(SyntaxKind.PublicKeyword));
+
+        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
+            .WithModifiers(classAccessModifierSyntax)
+            .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
+
+        NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName("Abc.Def"))
+            .AddMembers(classDeclaration);
+
+        return SF.CompilationUnit()
+            .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
     }
 
     private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);

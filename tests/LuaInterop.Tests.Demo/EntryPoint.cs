@@ -14,6 +14,8 @@ public static unsafe class EntryPoint
     {
         global::Demo.Marker.luainteropdemo.Generated2.SayHello();
 
+        _ = typeof(global::Abc.Def.DemoClass);
+
         const int tableIndex = 1;
 
         Lua.CreateTable(luaState, 0, 7);
