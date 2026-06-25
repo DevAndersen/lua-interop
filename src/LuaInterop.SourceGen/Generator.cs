@@ -15,6 +15,7 @@ internal class Generator : IIncrementalGenerator
     private const string _luaInteropTypeFullName = "global::LuaInterop.Native.Lua";
     private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
+    private const string _nintFullName = "global::System.IntPtr";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -159,7 +160,7 @@ internal class Generator : IIncrementalGenerator
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName("global::System.IntPtr"))]);
+            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName))]);
 
         // Method invocation, Lua.CreateTable
         ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
@@ -223,12 +224,12 @@ internal class Generator : IIncrementalGenerator
         TypeSyntax functionPointerParameterType = SF.FunctionPointerType(
             SF.FunctionPointerCallingConvention(SF.Token(SyntaxKind.UnmanagedKeyword)),
             SF.FunctionPointerParameterList([
-                SF.FunctionPointerParameter(SF.IdentifierName("global::System.IntPtr")),
+                SF.FunctionPointerParameter(SF.IdentifierName(_nintFullName)),
                 SF.FunctionPointerParameter(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)))]));
 
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName("global::System.IntPtr")),
+            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName)),
             SF.Parameter(SF.Identifier("functionName")).WithType(SF.PredefinedType(SF.Token(SyntaxKind.StringKeyword))),
             SF.Parameter(SF.Identifier("functionPointer")).WithType(functionPointerParameterType)]);
 
@@ -240,7 +241,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName("PushCClosure")),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.CastExpression(SF.IdentifierName("global::System.IntPtr"), SF.IdentifierName("functionPointer"))),
+                SF.Argument(SF.CastExpression(SF.IdentifierName(_nintFullName), SF.IdentifierName("functionPointer"))),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(0)))])));
 
         // Method invocation, Lua.SetField
