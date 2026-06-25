@@ -1,8 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Text;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace LuaInterop.SourceGen;
 
@@ -12,6 +12,9 @@ internal class Generator : IIncrementalGenerator
     private const string _luaOpenAttributeFullName = "LuaInterop.Attributes.LuaOpenAttribute";
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
+    private const string _luaInteropTypeFullName = "global::LuaInterop.Native.Lua";
+    private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
+    private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -94,7 +97,7 @@ internal class Generator : IIncrementalGenerator
 
             ctx.AddSource($"{compilationData.Assembly.Name}.Test2.g.cs", src);
 
-            CompilationUnitSyntax compilationUnit = Test().NormalizeWhitespace();
+            CompilationUnitSyntax compilationUnit = CreateCompilationUnit().NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
             ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText());
         });
@@ -131,46 +134,145 @@ internal class Generator : IIncrementalGenerator
         return false;
     }
 
-    private static CompilationUnitSyntax Test()
+    private static CompilationUnitSyntax CreateCompilationUnit()
     {
-        ParameterSyntax parameter = SF
-            .Parameter(SF.Identifier("luaState"))
-            .WithType(SF.IdentifierName("global::System.IntPtr"));
+        // Class access modifiers
+        SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
+            SF.Token(SyntaxKind.PublicKeyword),  // Todo: Can the class be private? Check if Lua can call it if private.
+            SF.Token(SyntaxKind.StaticKeyword),
+            SF.Token(SyntaxKind.UnsafeKeyword));
 
-        SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList<ParameterSyntax>().Add(parameter);
-
-        SF.TokenList(SF.Token(SyntaxKind.ConstKeyword));
-        SF.VariableDeclaration(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)));
-
-        SF.VariableDeclarator("asdf");
-
-        //LocalDeclarationStatementSyntax variable = SF.LocalDeclarationStatement(SF.TokenList(SF.Token(SyntaxKind.ConstKeyword)), SF.VariableDeclaration(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)), SF.SeparatedList<VariableDeclaratorSyntax>().Add(SF.VariableDeclarator("asdf"))));
-
-        ReturnStatementSyntax returnStatement = SF.ReturnStatement(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
-            .WithTrailingTrivia(SF.Comment("// Stack index of table"));
-
-        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>().AddRange([returnStatement]);
-
-        BlockSyntax block = SF.Block(statementList);
-
-        MethodDeclarationSyntax methodDeclaration =  SF.MethodDeclaration(
-            SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
-            SF.Identifier("LuaOpen"))
-            .WithModifiers(SF.TokenList(SF.Token(SyntaxKind.PublicKeyword), SF.Token(SyntaxKind.StaticKeyword)))
-            .WithParameterList(SF.ParameterList(parameterSyntaxList))
-            .WithBody(block);
-
-        SyntaxTokenList classAccessModifierSyntax = SF.TokenList(SF.Token(SyntaxKind.PublicKeyword));
-
+        // Class
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
             .WithModifiers(classAccessModifierSyntax)
-            .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(methodDeclaration));
+            .WithMembers(SF.List<MemberDeclarationSyntax>([GenerateLuaOpenMethod(), GenerateRegisterFunctionMethod()]));
 
+        // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName("Abc.Def"))
             .AddMembers(classDeclaration);
 
         return SF.CompilationUnit()
             .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
+    }
+
+    private static MethodDeclarationSyntax GenerateLuaOpenMethod()
+    {
+        // Parameters
+        SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
+            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName("global::System.IntPtr"))]);
+
+        // Method invocation, Lua.CreateTable
+        ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(_luaInteropTypeFullName),
+                SF.IdentifierName("CreateTable")),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(0))),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))])));
+
+        // Method invocation, RegisterFunction
+        ExpressionStatementSyntax registerFunctionMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
+            SF.IdentifierName("RegisterFunction"),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal("functionName"))),
+                SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName("MethodName")))])));
+
+        // Return statement
+        ReturnStatementSyntax returnStatement = SF.ReturnStatement(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
+            .WithTrailingTrivia(SF.Comment("// Stack index of table"));
+
+        // Method statements
+        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
+            createTableMethodInvocation,
+            registerFunctionMethodInvocation,
+            returnStatement]);
+
+        // Attribute, UnmanagedCallersOnly
+        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(
+            SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName),
+            SF.AttributeArgumentList([
+                SF.AttributeArgument(
+                    SF.LiteralExpression(
+                        SyntaxKind.StringLiteralExpression,
+                        SF.Literal("luaopen_luainteropdemo"))) // Todo: Use assembly name.
+                .WithNameEquals(
+                    SF.NameEquals(
+                        SF.IdentifierName(_unmanagedCallersOnlyAttributeEntryPointArgument)))]));
+
+        // Method
+        MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
+            SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
+            SF.Identifier("LuaOpen"))
+                .WithModifiers(SF.TokenList(
+                    SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the luaopen method be private? Check if Lua can call it if private.
+                    SF.Token(SyntaxKind.StaticKeyword)))
+                .WithParameterList(SF.ParameterList(parameterSyntaxList))
+                .WithBody(SF.Block(statementList))
+                .WithAttributeLists([
+                    SF.AttributeList([unmanagedCallersOnlyAttribute])]);
+
+        return methodDeclaration;
+    }
+
+    private static MethodDeclarationSyntax GenerateRegisterFunctionMethod()
+    {
+        // Parameter, function pointer type
+        TypeSyntax functionPointerParameterType = SF.FunctionPointerType(
+            SF.FunctionPointerCallingConvention(SF.Token(SyntaxKind.UnmanagedKeyword)),
+            SF.FunctionPointerParameterList([
+                SF.FunctionPointerParameter(SF.IdentifierName("global::System.IntPtr")),
+                SF.FunctionPointerParameter(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)))]));
+
+        // Parameters
+        SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
+            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName("global::System.IntPtr")),
+            SF.Parameter(SF.Identifier("functionName")).WithType(SF.PredefinedType(SF.Token(SyntaxKind.StringKeyword))),
+            SF.Parameter(SF.Identifier("functionPointer")).WithType(functionPointerParameterType)]);
+
+        // Method invocation, Lua.CreateTable
+        ExpressionStatementSyntax pushCClosureMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(_luaInteropTypeFullName),
+                SF.IdentifierName("PushCClosure")),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.CastExpression(SF.IdentifierName("global::System.IntPtr"), SF.IdentifierName("functionPointer"))),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(0)))])));
+
+        // Method invocation, Lua.SetField
+        ExpressionStatementSyntax setFieldMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(_luaInteropTypeFullName),
+                SF.IdentifierName("SetField")),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(-2))),
+                SF.Argument(SF.IdentifierName("functionName"))])));
+
+        // Method statements
+        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
+            pushCClosureMethodInvocation,
+            setFieldMethodInvocation]);
+
+        // Attribute, UnmanagedCallersOnly
+        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
+
+        // Method
+        MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
+            SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
+            SF.Identifier("RegisterFunction"))
+                .WithModifiers(SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword), SF.Token(SyntaxKind.StaticKeyword)))
+                .WithParameterList(SF.ParameterList(parameterSyntaxList))
+                .WithBody(SF.Block(statementList))
+                .WithAttributeLists([
+                    SF.AttributeList([unmanagedCallersOnlyAttribute])]);
+
+        return methodDeclaration;
     }
 
     private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
