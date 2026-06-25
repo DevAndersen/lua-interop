@@ -235,6 +235,8 @@ internal class Generator : IIncrementalGenerator
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol)
     {
+        IEnumerable<(LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)> argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead);
+
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
             SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName))]);
@@ -249,7 +251,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName("global::System.Console"),
                 SF.IdentifierName("WriteLine")),
             SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("arg1"))])));
+                .. argumentReads.Select(x => SF.Argument(SF.IdentifierName(x.ArgumentName)))])));
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
@@ -285,7 +287,7 @@ internal class Generator : IIncrementalGenerator
 
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
-            .. methodSymbol.Parameters.Select(GenerateParameterRead),
+            .. argumentReads.Select(x => x.StatementSyntax),
             consoleWriteLineStatement,
             returnStatement]);
 
@@ -304,9 +306,10 @@ internal class Generator : IIncrementalGenerator
         return methodDeclaration;
     }
 
-    private static LocalDeclarationStatementSyntax GenerateParameterRead(IParameterSymbol parameter, int index)
+    private static (LocalDeclarationStatementSyntax statementSyntax, string argumentName) GenerateParameterRead(IParameterSymbol parameter, int index)
     {
         int luaIndex = index + 1;
+        string argumentName = $"arg{luaIndex}";
         string fullTypeName = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
         // Method invocation arguments, read argument
@@ -323,7 +326,7 @@ internal class Generator : IIncrementalGenerator
             .WithVariables(
                 SF.SingletonSeparatedList(
                 SF.VariableDeclarator(
-                    SF.Identifier($"arg{luaIndex}"))
+                    SF.Identifier(argumentName))
             .WithInitializer(
                 SF.EqualsValueClause(
                     SF.InvocationExpression(
@@ -331,9 +334,10 @@ internal class Generator : IIncrementalGenerator
                             SyntaxKind.SimpleMemberAccessExpression,
                             SF.IdentifierName(_luaInteropHelperTypeFullName),
                             SF.IdentifierName(GetReadMethodName(parameter.Type))))
-                    .WithArgumentList(parameterReadArguments))))));
+                    .WithArgumentList(parameterReadArguments))))))
+            .WithTrailingTrivia(SF.Comment($"// {parameter.Name}"));
 
-        return parameterReadStatement;
+        return (parameterReadStatement, argumentName);
     }
 
     private static string GetReadMethodName(ITypeSymbol typeSymbol)
