@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LuaInterop.SourceGen;
@@ -101,13 +102,13 @@ internal class Generator : IIncrementalGenerator
 
             ctx.AddSource($"{compilationData.Assembly.Name}.Test2.g.cs", src);
 
-            CompilationUnitSyntax compilationUnit = CreateCompilationUnit(methodSymbols).NormalizeWhitespace();
+            CompilationUnitSyntax compilationUnit = CreateCompilationUnit(methodSymbols, assemblyAttribute, methodAttribute).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
             ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText());
         });
     }
 
-    private static bool TryGetAttributeValue<T>(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, string argumentName, out T? value)
+    private static bool TryGetAttributeValue<T>(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, string argumentName, [NotNullWhen(true)] out T? value)
     {
         AttributeData? matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
         if (matchingAttribute == null)
@@ -138,7 +139,7 @@ internal class Generator : IIncrementalGenerator
         return false;
     }
 
-    private static CompilationUnitSyntax CreateCompilationUnit(IEnumerable<IMethodSymbol> methodSymbols)
+    private static CompilationUnitSyntax CreateCompilationUnit(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute)
     {
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
@@ -150,7 +151,7 @@ internal class Generator : IIncrementalGenerator
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
-                GenerateLuaOpenMethod(methodSymbols),
+                GenerateLuaOpenMethod(methodSymbols, assemblyAttribute, methodAttribute),
                 .. methodSymbols.Select(GenerateFunctionMethod)]));
 
         // Namespace
@@ -161,7 +162,7 @@ internal class Generator : IIncrementalGenerator
             .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
     }
 
-    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IEnumerable<IMethodSymbol> methodSymbols)
+    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute)
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
@@ -185,7 +186,7 @@ internal class Generator : IIncrementalGenerator
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
             createTableMethodInvocation,
-            .. methodSymbols.Select(GenerateRegisterFunctionInvocation),
+            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x, methodAttribute)),
             returnStatement]);
 
         // Attribute, UnmanagedCallersOnly
@@ -215,8 +216,12 @@ internal class Generator : IIncrementalGenerator
         return methodDeclaration;
     }
 
-    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol)
+    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, INamedTypeSymbol methodAttribute)
     {
+        string functionName = TryGetAttributeValue(methodSymbol, methodAttribute, _luaFunctionAttributeNameArgumentName, out string? customFunctionName)
+            ? customFunctionName
+            : methodSymbol.Name;
+
         return SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -224,7 +229,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName("RegisterFunction")),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(methodSymbol.Name))),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
                 SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodSymbol.Name)))])));
     }
 
@@ -300,4 +305,6 @@ internal class Generator : IIncrementalGenerator
     }
 
     private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
+
+    private record struct MethodData(IMethodSymbol methodSymbol);
 }

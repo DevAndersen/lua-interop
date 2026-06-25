@@ -2,28 +2,43 @@
 #pragma warning disable IDE0290 // Use primary constructor
 #pragma warning disable IDE0060 // Remove unused parameter
 
-namespace System.Runtime.CompilerServices;
-
-/// <summary>
-/// Makes <c>init</c> working on .NET Standard 2.0.
-/// </summary>
-internal static class IsExternalInit
+namespace System.Runtime.CompilerServices
 {
-}
-
-/// <summary>
-/// Makes <c>required</c> work on .NET Standard 2.0.
-/// </summary>
-internal class RequiredMemberAttribute : Attribute
-{
-}
-
-/// <summary>
-/// Makes <c>required</c> work on .NET Standard 2.0.
-/// </summary>
-internal sealed class CompilerFeatureRequiredAttribute : Attribute
-{
-    internal CompilerFeatureRequiredAttribute(string featureName)
+    /// <summary>
+    /// Makes <c>init</c> working on .NET Standard 2.0.
+    /// </summary>
+    internal static class IsExternalInit
     {
+    }
+
+    /// <summary>
+    /// Makes <c>required</c> work on .NET Standard 2.0.
+    /// </summary>
+    internal class RequiredMemberAttribute : Attribute
+    {
+    }
+
+    /// <summary>
+    /// Makes <c>required</c> work on .NET Standard 2.0.
+    /// </summary>
+    internal sealed class CompilerFeatureRequiredAttribute : Attribute
+    {
+        internal CompilerFeatureRequiredAttribute(string featureName)
+        {
+        }
+    }
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+    /// <summary>
+    /// Makes <c>[NotNullWhen]</c> work on .NET Standard 2.0.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    internal sealed class NotNullWhenAttribute : Attribute
+    {
+        public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
+
+        public bool ReturnValue { get; }
     }
 }
