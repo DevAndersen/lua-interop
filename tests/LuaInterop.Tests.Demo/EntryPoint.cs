@@ -9,7 +9,7 @@ namespace LuaInterop.Tests.Demo;
 
 public static unsafe class EntryPoint
 {
-    [UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
+    //[UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")] // Must match "luaopen_[ASSEMBLY NAME]", must seemingly be lower-case, can be set with <AssemblyName> in the .csproj file.
     public static int LuaOpen(nint luaState)
     {
         global::Demo.Marker.luainteropdemo.Generated2.SayHello();

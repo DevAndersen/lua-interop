@@ -13,6 +13,7 @@ internal class Generator : IIncrementalGenerator
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
     private const string _luaInteropTypeFullName = "global::LuaInterop.Native.Lua";
+    private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
     private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
     private const string _nintFullName = "global::System.IntPtr";
@@ -146,7 +147,9 @@ internal class Generator : IIncrementalGenerator
         // Class
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
             .WithModifiers(classAccessModifierSyntax)
-            .WithMembers(SF.List<MemberDeclarationSyntax>([GenerateLuaOpenMethod(), GenerateRegisterFunctionMethod()]));
+            .WithMembers(SF.List<MemberDeclarationSyntax>([
+                GenerateLuaOpenMethod(),
+                GenerateFunctionMethod()]));
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName("Abc.Def"))
@@ -175,7 +178,10 @@ internal class Generator : IIncrementalGenerator
 
         // Method invocation, RegisterFunction
         ExpressionStatementSyntax registerFunctionMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
-            SF.IdentifierName("RegisterFunction"),
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(_luaInteropHelperTypeFullName),
+                SF.IdentifierName("RegisterFunction")),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal("functionName"))),
@@ -218,55 +224,66 @@ internal class Generator : IIncrementalGenerator
         return methodDeclaration;
     }
 
-    private static MethodDeclarationSyntax GenerateRegisterFunctionMethod()
+    private static MethodDeclarationSyntax GenerateFunctionMethod()
     {
-        // Parameter, function pointer type
-        TypeSyntax functionPointerParameterType = SF.FunctionPointerType(
-            SF.FunctionPointerCallingConvention(SF.Token(SyntaxKind.UnmanagedKeyword)),
-            SF.FunctionPointerParameterList([
-                SF.FunctionPointerParameter(SF.IdentifierName(_nintFullName)),
-                SF.FunctionPointerParameter(SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)))]));
-
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName)),
-            SF.Parameter(SF.Identifier("functionName")).WithType(SF.PredefinedType(SF.Token(SyntaxKind.StringKeyword))),
-            SF.Parameter(SF.Identifier("functionPointer")).WithType(functionPointerParameterType)]);
-
-        // Method invocation, Lua.CreateTable
-        ExpressionStatementSyntax pushCClosureMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
-            SF.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(_luaInteropTypeFullName),
-                SF.IdentifierName("PushCClosure")),
-            SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.CastExpression(SF.IdentifierName(_nintFullName), SF.IdentifierName("functionPointer"))),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(0)))])));
-
-        // Method invocation, Lua.SetField
-        ExpressionStatementSyntax setFieldMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
-            SF.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(_luaInteropTypeFullName),
-                SF.IdentifierName("SetField")),
-            SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(-2))),
-                SF.Argument(SF.IdentifierName("functionName"))])));
-
-        // Method statements
-        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
-            pushCClosureMethodInvocation,
-            setFieldMethodInvocation]);
+            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName))]);
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
 
+        // Method invocation, RegisterFunction
+        ExpressionStatementSyntax consoleWriteLineStatement = SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName("global::System.Console"),
+                SF.IdentifierName("WriteLine")),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("arg1"))])));
+
+        // Method invocation arguments, read argument
+        ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
+            SF.Argument(SF.IdentifierName("luaState")),
+            SF.Argument(
+                SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
+                SF.Literal(1)))]);
+
+        // Method invocation, read argument
+        LocalDeclarationStatementSyntax parameterReadStatement = SF.LocalDeclarationStatement(
+            SF.VariableDeclaration(
+                SF.PredefinedType(
+                    SF.Token(SyntaxKind.StringKeyword)))
+            .WithVariables(
+                SF.SingletonSeparatedList(
+                SF.VariableDeclarator(
+                    SF.Identifier("arg1"))
+            .WithInitializer(
+                SF.EqualsValueClause(
+                    SF.InvocationExpression(
+                        SF.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            SF.IdentifierName(_luaInteropHelperTypeFullName),
+                            SF.IdentifierName("ReadStringArg")))
+                    .WithArgumentList(parameterReadArguments))))));
+
+        // Return statement
+        ReturnStatementSyntax returnStatement = SF.ReturnStatement(
+            SF.LiteralExpression(
+                SyntaxKind.NumericLiteralExpression,
+                SF.Literal(0)))
+            .WithTrailingTrivia(SF.Comment("// Number of pushed values"));
+
+        // Method statements
+        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
+            parameterReadStatement,
+            consoleWriteLineStatement,
+            returnStatement]);
+
         // Method
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
-            SF.PredefinedType(SF.Token(SyntaxKind.VoidKeyword)),
-            SF.Identifier("RegisterFunction"))
+            SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
+            SF.Identifier("MethodName"))
                 .WithModifiers(SF.TokenList(SF.Token(SyntaxKind.PrivateKeyword), SF.Token(SyntaxKind.StaticKeyword)))
                 .WithParameterList(SF.ParameterList(parameterSyntaxList))
                 .WithBody(SF.Block(statementList))
