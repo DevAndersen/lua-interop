@@ -285,7 +285,7 @@ internal class Generator : IIncrementalGenerator
 
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
-            parameterReadStatement,
+            .. methodSymbol.Parameters.Select(GenerateParameterRead),
             consoleWriteLineStatement,
             returnStatement]);
 
@@ -304,7 +304,48 @@ internal class Generator : IIncrementalGenerator
         return methodDeclaration;
     }
 
-    private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
+    private static LocalDeclarationStatementSyntax GenerateParameterRead(IParameterSymbol parameter, int index)
+    {
+        int luaIndex = index + 1;
+        string fullTypeName = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-    private record struct MethodData(IMethodSymbol methodSymbol);
+        // Method invocation arguments, read argument
+        ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
+            SF.Argument(SF.IdentifierName("luaState")),
+            SF.Argument(
+                SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
+                SF.Literal(luaIndex)))]);
+
+        // Method invocation, read argument
+        LocalDeclarationStatementSyntax parameterReadStatement = SF.LocalDeclarationStatement(
+            SF.VariableDeclaration(
+                SF.IdentifierName(fullTypeName))
+            .WithVariables(
+                SF.SingletonSeparatedList(
+                SF.VariableDeclarator(
+                    SF.Identifier($"arg{luaIndex}"))
+            .WithInitializer(
+                SF.EqualsValueClause(
+                    SF.InvocationExpression(
+                        SF.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            SF.IdentifierName(_luaInteropHelperTypeFullName),
+                            SF.IdentifierName(GetReadMethodName(parameter.Type))))
+                    .WithArgumentList(parameterReadArguments))))));
+
+        return parameterReadStatement;
+    }
+
+    private static string GetReadMethodName(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol switch
+        {
+            _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadStringArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Double => "ReadNumberArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadIntegerArg",
+            _ => "" // Todo: Handle unmappable types
+        };
+    }
+
+    private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
 }

@@ -45,7 +45,7 @@ public static unsafe class EntryPoint
     }
 
     [LuaFunction]
-    public static void DoWork1()
+    public static void DoWork1(string myNumber)
     {
         Console.WriteLine("Work 1 being done");
     }
