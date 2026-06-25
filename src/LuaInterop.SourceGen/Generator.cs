@@ -67,6 +67,19 @@ internal class Generator : IIncrementalGenerator
                 return;
             }
 
+            foreach (IMethodSymbol methodSymbol in methodSymbols)
+            {
+                if (!methodSymbol.IsStatic)
+                {
+                    // Todo: Disallow instanced methods.
+                }
+
+                if (methodSymbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal))
+                {
+                    // Todo: Disallow unreachable methods.
+                }
+            }
+
             string str = TryGetAttributeNamedArgument(matchingAttribute, "Number", out int value) ? value.ToString() : "FAILED";
 
             string abc(IMethodSymbol symbol)
@@ -235,6 +248,7 @@ internal class Generator : IIncrementalGenerator
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol)
     {
+        string containingTypeFullName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         IEnumerable<(LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)> argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead);
 
         // Parameters
@@ -248,8 +262,8 @@ internal class Generator : IIncrementalGenerator
         ExpressionStatementSyntax consoleWriteLineStatement = SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName("global::System.Console"),
-                SF.IdentifierName("WriteLine")),
+                SF.IdentifierName(containingTypeFullName),
+                SF.IdentifierName(methodSymbol.Name)),
             SF.ArgumentList([
                 .. argumentReads.Select(x => SF.Argument(SF.IdentifierName(x.ArgumentName)))])));
 
@@ -347,6 +361,7 @@ internal class Generator : IIncrementalGenerator
             _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadStringArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Double => "ReadNumberArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadIntegerArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadIntegerArg",
             _ => "" // Todo: Handle unmappable types
         };
     }
