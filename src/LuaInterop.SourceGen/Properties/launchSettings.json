@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LuaInterop.SourceGen": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\tests\\LuaInterop.Tests.Demo\\LuaInterop.Tests.Demo.csproj"
+    }
+  }
+}
