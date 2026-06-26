@@ -1,23 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- General -->
-    <PropertyGroup>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<!-- General -->
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<AssemblyName>luainteropdemo</AssemblyName>
-    </PropertyGroup>
+	</PropertyGroup>
 
-    <!-- Native AOT -->
-    <PropertyGroup>
-        <PublishAot>true</PublishAot>
-        <NativeLib>Shared</NativeLib>
-        <IsAotCompatible>true</IsAotCompatible>
-        <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
-    </PropertyGroup>
+	<!-- Native AOT -->
+	<PropertyGroup>
+		<PublishAot>true</PublishAot>
+		<NativeLib>Shared</NativeLib>
+		<IsAotCompatible>true</IsAotCompatible>
+		<VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
+	</PropertyGroup>
 
-    <!-- Project references -->
-    <ItemGroup>
-      <ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
-			<ProjectReference Include="..\..\src\LuaInterop.SourceGen\LuaInterop.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    </ItemGroup>
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\LuaInterop\LuaInterop.csproj" />
+		<ProjectReference Include="..\..\src\LuaInterop.SourceGen\LuaInterop.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
 
 </Project>

@@ -1,21 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- General -->
-    <PropertyGroup>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
+	<!-- General -->
+	<PropertyGroup>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-    <!-- Native AOT -->
-    <PropertyGroup>
-        <PublishAot>true</PublishAot>
-        <NativeLib>Shared</NativeLib>
-        <IsAotCompatible>true</IsAotCompatible>
-        <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
-    </PropertyGroup>
+	<!-- Native AOT -->
+	<PropertyGroup>
+		<PublishAot>true</PublishAot>
+		<NativeLib>Shared</NativeLib>
+		<IsAotCompatible>true</IsAotCompatible>
+		<VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
+	</PropertyGroup>
 
-	  <!-- Define Windows constant -->
-	  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-		    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
-	  </PropertyGroup>
+	<!-- Define Windows constant -->
+	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	</PropertyGroup>
 
 </Project>

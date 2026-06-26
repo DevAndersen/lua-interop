@@ -1,39 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- General -->
-    <PropertyGroup>
-        <OutputType>Exe</OutputType>
-        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-        <TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
-    </PropertyGroup>
+	<!-- General -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+		<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+		<TestingPlatformCommandLineArguments>--ignore-exit-code 8</TestingPlatformCommandLineArguments>
+	</PropertyGroup>
 
-    <!-- Code quality -->
-    <PropertyGroup>
-        <NoWarn>CA1859,IDE0039</NoWarn>
-    </PropertyGroup>
+	<!-- Code quality -->
+	<PropertyGroup>
+		<NoWarn>CA1859,IDE0039</NoWarn>
+	</PropertyGroup>
 
-    <!-- Package references -->
-    <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="xunit.v3" />
-        <PackageReference Include="xunit.runner.visualstudio">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
+	<!-- Package references -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="xunit.v3" />
+		<PackageReference Include="xunit.runner.visualstudio">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
-    <!-- Project references -->
-    <ItemGroup>
-      <ProjectReference Include="../LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
-    </ItemGroup>
+	<!-- Project references -->
+	<ItemGroup>
+		<ProjectReference Include="../LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
+	</ItemGroup>
 
-    <!-- Pre-test build steps -->
-    <Target Name="PublishNativeLibraryUnix" BeforeTargets="Test" Condition="'$(OS)' == 'Unix'">
-        <Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(OutputPath)" />
-    </Target>
-    <Target Name="PublishNativeLibraryWindows" BeforeTargets="Test" Condition="'$(OS)' == 'Windows_NT'">
-        <Exec Command="powershell $(MSBuildProjectDirectory)\build.ps1 $(OutputPath)" />
-    </Target>
+	<!-- Pre-test build steps -->
+	<Target Name="PublishNativeLibraryUnix" BeforeTargets="Test" Condition="'$(OS)' == 'Unix'">
+		<Exec Command="sh $(MSBuildProjectDirectory)/build.sh $(OutputPath)" />
+	</Target>
+	<Target Name="PublishNativeLibraryWindows" BeforeTargets="Test" Condition="'$(OS)' == 'Windows_NT'">
+		<Exec Command="powershell $(MSBuildProjectDirectory)\build.ps1 $(OutputPath)" />
+	</Target>
 
 </Project>
