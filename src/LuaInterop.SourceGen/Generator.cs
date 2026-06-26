@@ -18,6 +18,7 @@ internal class Generator : IIncrementalGenerator
     private const string _luaReadHelperTypeFullName = "global::LuaInterop.LuaReadHelper";
     private const string _luaPushHelperTypeFullName = "global::LuaInterop.LuaPushHelper";
     private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
+    private const string _generatedCodeAttributeAttributeFullName = "global::System.CodeDom.Compiler.GeneratedCodeAttribute";
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
     private const string _nintFullName = "global::System.IntPtr";
     private const string _returnVariableName = "returnedValue";
@@ -147,7 +148,9 @@ internal class Generator : IIncrementalGenerator
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
                 GenerateLuaOpenMethod(methodSymbols, methodAttribute, assemblyName),
-                .. methodSymbols.Select(GenerateFunctionMethod)]));
+                .. methodSymbols.Select(GenerateFunctionMethod)]))
+                .WithAttributeLists([
+                    SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])]); ;
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName(_generatedCodeNamespace))
@@ -190,7 +193,7 @@ internal class Generator : IIncrementalGenerator
                 SF.AttributeArgument(
                     SF.LiteralExpression(
                         SyntaxKind.StringLiteralExpression,
-                        SF.Literal($"luaopen_{assemblyName}"))) // Todo: Use assembly name.
+                        SF.Literal($"luaopen_{assemblyName}")))
                 .WithNameEquals(
                     SF.NameEquals(
                         SF.IdentifierName(_unmanagedCallersOnlyAttributeEntryPointArgument)))]));
@@ -361,6 +364,25 @@ internal class Generator : IIncrementalGenerator
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
                 SF.Argument(SF.IdentifierName(_returnVariableName))])));
+    }
+
+    private static AttributeSyntax GenerateGeneratedCodeAttributeAttribute()
+    {
+        string? name = typeof(Generator).Assembly.GetName().Name;
+        string version = typeof(Generator).Assembly.GetName().Version.ToString();
+
+        // Attribute, GeneratedCodeAttribute
+        return SF.Attribute(
+            SF.IdentifierName(_generatedCodeAttributeAttributeFullName),
+            SF.AttributeArgumentList([
+                SF.AttributeArgument(
+                    SF.LiteralExpression(
+                        SyntaxKind.StringLiteralExpression,
+                        SF.Literal(name))),
+                SF.AttributeArgument(
+                    SF.LiteralExpression(
+                        SyntaxKind.StringLiteralExpression,
+                        SF.Literal(version)))]));
     }
 
     private static string GetReadMethodName(ITypeSymbol typeSymbol)
