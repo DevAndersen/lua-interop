@@ -78,6 +78,11 @@ internal class Generator : IIncrementalGenerator
                 {
                     // Todo: Disallow unreachable methods.
                 }
+
+                if (!IsAllowedReturnType(methodSymbol))
+                {
+                    // Todo: Disallow methods with unmappable return types.
+                }
             }
 
             string str = TryGetAttributeNamedArgument(matchingAttribute, "Number", out int value) ? value.ToString() : "FAILED";
@@ -360,10 +365,27 @@ internal class Generator : IIncrementalGenerator
         {
             _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadStringArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Double => "ReadNumberArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Single => "ReadNumberArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Byte => "ReadIntegerArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "ReadIntegerArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadIntegerArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadIntegerArg",
             _ => "" // Todo: Handle unmappable types
         };
+    }
+
+    private static bool IsAllowedReturnType(IMethodSymbol methodSymbol)
+    {
+        ITypeSymbol returnType = methodSymbol.ReturnType;
+
+        return methodSymbol.ReturnsVoid
+            || returnType.SpecialType == SpecialType.System_String
+            || returnType.SpecialType == SpecialType.System_Double
+            || returnType.SpecialType == SpecialType.System_Single
+            || returnType.SpecialType == SpecialType.System_Byte
+            || returnType.SpecialType == SpecialType.System_Int16
+            || returnType.SpecialType == SpecialType.System_Int32
+            || returnType.SpecialType == SpecialType.System_Int64;
     }
 
     private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
