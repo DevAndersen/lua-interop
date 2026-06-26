@@ -150,7 +150,8 @@ internal class Generator : IIncrementalGenerator
                 GenerateLuaOpenMethod(methodSymbols, methodAttribute, assemblyName),
                 .. methodSymbols.Select(GenerateFunctionMethod)]))
                 .WithAttributeLists([
-                    SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])]); ;
+                    SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
+                .WithLeadingTrivia(GenerateXmlSummary("Contains Lua interoperability logic."));
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName(_generatedCodeNamespace))
@@ -209,7 +210,8 @@ internal class Generator : IIncrementalGenerator
                 .WithParameterList(SF.ParameterList(parameterSyntaxList))
                 .WithBody(SF.Block(statementList))
                 .WithAttributeLists([
-                    SF.AttributeList([unmanagedCallersOnlyAttribute])]);
+                    SF.AttributeList([unmanagedCallersOnlyAttribute])])
+                .WithLeadingTrivia(GenerateXmlSummary("Entry point for Lua, exposes available functions."));
 
         return methodDeclaration;
     }
@@ -383,6 +385,21 @@ internal class Generator : IIncrementalGenerator
                     SF.LiteralExpression(
                         SyntaxKind.StringLiteralExpression,
                         SF.Literal(version)))]));
+    }
+
+    private static SyntaxTriviaList GenerateXmlSummary(string summary)
+    {
+        string[] lines = summary
+            .Split(["\r\n", "\n"], StringSplitOptions.None)
+            .Select(line => "/// " + line)
+            .ToArray();
+
+        return SF.ParseLeadingTrivia($"""
+            /// <summary>
+            {string.Join("\r\n", lines)}
+            /// </summary>
+
+            """);
     }
 
     private static string GetReadMethodName(ITypeSymbol typeSymbol)
