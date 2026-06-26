@@ -338,6 +338,7 @@ internal class Generator : IIncrementalGenerator
 
     private static (LocalDeclarationStatementSyntax statementSyntax, string argumentName) GenerateParameterRead(IParameterSymbol parameter, int index)
     {
+        // Todo: Support nullable parameters
         int luaIndex = index + 1;
         string argumentName = $"arg{luaIndex}";
         string fullTypeName = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -365,7 +366,7 @@ internal class Generator : IIncrementalGenerator
                             SF.IdentifierName(_luaInteropHelperTypeFullName),
                             SF.IdentifierName(GetReadMethodName(parameter.Type))))
                     .WithArgumentList(parameterReadArguments))))))
-            .WithTrailingTrivia(SF.Comment($"// {parameter.Name}"));
+            .WithTrailingTrivia(SF.Comment($"// Parameter \"{parameter.Name}\""));
 
         return (parameterReadStatement, argumentName);
     }
@@ -393,13 +394,14 @@ internal class Generator : IIncrementalGenerator
     {
         return typeSymbol switch
         {
-            _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadStringArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Double => "ReadNumberArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Single => "ReadNumberArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Byte => "ReadIntegerArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "ReadIntegerArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadIntegerArg",
-            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadIntegerArg",
+            _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadString",
+            _ when typeSymbol.SpecialType == SpecialType.System_Double => "ReadDouble",
+            _ when typeSymbol.SpecialType == SpecialType.System_Single => "ReadFloat",
+            _ when typeSymbol.SpecialType == SpecialType.System_Byte => "ReadByte",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "ReadShort",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadInt",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadLong",
+            _ when typeSymbol.SpecialType == SpecialType.System_Boolean => "ReadBoolean",
             _ => "" // Todo: Handle unmappable types
         };
     }
@@ -415,7 +417,7 @@ internal class Generator : IIncrementalGenerator
             _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "PushShort",
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "PushInt",
             _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "PushLong",
-            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "PushBoolean",
+            _ when typeSymbol.SpecialType == SpecialType.System_Boolean => "PushBoolean",
             _ => "" // Todo: Handle unmappable types
         };
     }
@@ -431,7 +433,8 @@ internal class Generator : IIncrementalGenerator
             || returnType.SpecialType == SpecialType.System_Byte
             || returnType.SpecialType == SpecialType.System_Int16
             || returnType.SpecialType == SpecialType.System_Int32
-            || returnType.SpecialType == SpecialType.System_Int64;
+            || returnType.SpecialType == SpecialType.System_Int64
+            || returnType.SpecialType == SpecialType.System_Boolean;
     }
 
     private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);

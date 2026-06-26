@@ -56,18 +56,26 @@ public static unsafe class EntryPoint
         Console.WriteLine("Work 2 being done");
     }
 
-    [LuaFunction()]
+    [LuaFunction]
     public static int DoWork3()
     {
         Console.WriteLine("Work 3 being done");
         return 4;
     }
 
-    [LuaFunction()]
+    [LuaFunction]
     public static int DoWork4(string text)
     {
         Console.WriteLine($"Work 4 being done, the text is \"{text}\"");
         return 4;
+    }
+
+    [LuaFunction]
+    public static int Addition(int a, int b)
+    {
+        int sum = a + b;
+        Console.WriteLine($"Performing addition: {a} + {b} = {sum}");
+        return sum;
     }
 
     [UnmanagedCallersOnly]
