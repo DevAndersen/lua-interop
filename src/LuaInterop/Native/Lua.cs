@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace LuaInterop.Native;
 
-public static unsafe partial class Lua
+internal static partial class Lua
 {
 #if WINDOWS
     private const string Library = "lua55.dll";

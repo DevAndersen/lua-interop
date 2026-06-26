@@ -6,9 +6,8 @@ using System.Runtime.InteropServices;
 
 namespace LuaInterop.Native;
 
-public static unsafe partial class Lua
+internal static unsafe partial class Lua
 {
-
     [LibraryImport(Library, EntryPoint = "luaL_checklstring", StringMarshalling = StringMarshalling.Utf8)]
     public static partial byte* CheckLString(
         lua_State L,

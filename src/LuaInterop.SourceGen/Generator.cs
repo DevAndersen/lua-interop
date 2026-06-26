@@ -13,8 +13,8 @@ internal class Generator : IIncrementalGenerator
     private const string _luaOpenAttributeFullName = "LuaInterop.Attributes.LuaOpenAttribute";
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
-    private const string _luaInteropTypeFullName = "global::LuaInterop.Native.Lua";
     private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
+    private const string _luaReadHelperTypeFullName = "global::LuaInterop.LuaReadHelper";
     private const string _luaPushHelperTypeFullName = "global::LuaInterop.LuaPushHelper";
     private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
@@ -194,11 +194,10 @@ internal class Generator : IIncrementalGenerator
         ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(_luaInteropTypeFullName),
+                SF.IdentifierName(_luaInteropHelperTypeFullName),
                 SF.IdentifierName("CreateTable")),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(0))),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Count())))])));
 
         // Return statement
@@ -363,7 +362,7 @@ internal class Generator : IIncrementalGenerator
                     SF.InvocationExpression(
                         SF.MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
-                            SF.IdentifierName(_luaInteropHelperTypeFullName),
+                            SF.IdentifierName(_luaReadHelperTypeFullName),
                             SF.IdentifierName(GetReadMethodName(parameter.Type))))
                     .WithArgumentList(parameterReadArguments))))))
             .WithTrailingTrivia(SF.Comment($"// Parameter \"{parameter.Name}\""));

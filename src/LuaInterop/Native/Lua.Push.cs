@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace LuaInterop.Native;
 
-public static unsafe partial class Lua
+internal static partial class Lua
 {
     [LibraryImport(Library, EntryPoint = "lua_pushcclosure")]
     public static partial void PushCClosure(
