@@ -7,7 +7,7 @@ namespace LuaInterop.Tests.Demo;
 public static class EntryPoint
 {
     // For navigating to source generated code.
-    private const string _generatedClassName = nameof(Abc.Def.DemoClass);
+    private const string _generatedClassName = nameof(LuaInterop.Generated.DemoClass);
 
     [LuaFunction]
     public static void DoWork1(string text)

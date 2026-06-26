@@ -10,6 +10,7 @@ namespace LuaInterop.SourceGen;
 [Generator(LanguageNames.CSharp)]
 internal class Generator : IIncrementalGenerator
 {
+    private const string _generatedCodeNamespace = "LuaInterop.Generated";
     private const string _luaOpenAttributeFullName = "LuaInterop.Attributes.LuaOpenAttribute";
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
@@ -38,7 +39,7 @@ internal class Generator : IIncrementalGenerator
                 return default;
             }
 
-            return new CompilationData(compilation.Assembly, assemblyAttributeTypeSymbol, methodAttributeTypeSymbol);
+            return new CompilationData(compilation.Assembly, assemblyAttributeTypeSymbol, methodAttributeTypeSymbol, compilation.AssemblyName);
         });
 
         // Check for method attributes.
@@ -54,7 +55,7 @@ internal class Generator : IIncrementalGenerator
         {
             // Deconstruct.
             (ImmutableArray<IMethodSymbol?> nullableMethodSymbols, CompilationData compilationData) = data;
-            (IAssemblySymbol assembly, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute) = compilationData;
+            (IAssemblySymbol assembly, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute, string? assemblyName) = compilationData;
 
             IEnumerable<IMethodSymbol> methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>();
 
@@ -68,6 +69,13 @@ internal class Generator : IIncrementalGenerator
             {
                 return;
             }
+
+            if (IsNullOrWhiteSpace(assemblyName))
+            {
+                return;
+            }
+
+            // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
             foreach (IMethodSymbol methodSymbol in methodSymbols)
             {
@@ -89,7 +97,7 @@ internal class Generator : IIncrementalGenerator
                 // Todo: Disallow methods with the same names/function names.
             }
 
-            CompilationUnitSyntax compilationUnit = CreateCompilationUnit(methodSymbols, assemblyAttribute, methodAttribute).NormalizeWhitespace();
+            CompilationUnitSyntax compilationUnit = CreateCompilationUnit(methodSymbols, methodAttribute, assemblyName).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
             ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText());
         });
@@ -126,7 +134,7 @@ internal class Generator : IIncrementalGenerator
         return false;
     }
 
-    private static CompilationUnitSyntax CreateCompilationUnit(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute)
+    private static CompilationUnitSyntax CreateCompilationUnit(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
     {
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
@@ -138,18 +146,18 @@ internal class Generator : IIncrementalGenerator
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
-                GenerateLuaOpenMethod(methodSymbols, assemblyAttribute, methodAttribute),
+                GenerateLuaOpenMethod(methodSymbols, methodAttribute, assemblyName),
                 .. methodSymbols.Select(GenerateFunctionMethod)]));
 
         // Namespace
-        NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName("Abc.Def"))
+        NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName(_generatedCodeNamespace))
             .AddMembers(classDeclaration);
 
         return SF.CompilationUnit()
             .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
     }
 
-    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute)
+    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
@@ -182,7 +190,7 @@ internal class Generator : IIncrementalGenerator
                 SF.AttributeArgument(
                     SF.LiteralExpression(
                         SyntaxKind.StringLiteralExpression,
-                        SF.Literal("luaopen_luainteropdemo"))) // Todo: Use assembly name.
+                        SF.Literal($"luaopen_{assemblyName}"))) // Todo: Use assembly name.
                 .WithNameEquals(
                     SF.NameEquals(
                         SF.IdentifierName(_unmanagedCallersOnlyAttributeEntryPointArgument)))]));
@@ -401,5 +409,19 @@ internal class Generator : IIncrementalGenerator
             || returnType.SpecialType == SpecialType.System_Boolean;
     }
 
-    private record struct CompilationData(IAssemblySymbol Assembly, INamedTypeSymbol AssemblyAttribute, INamedTypeSymbol MethodAttribute);
+    /// <summary>
+    /// Provides null-or-whitespace check with <see cref="NotNullWhenAttribute"/> for .NET Standard 2.0.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    private static bool IsNullOrWhiteSpace([NotNullWhen(false)] string? value)
+    {
+        return string.IsNullOrWhiteSpace(value);
+    }
+
+    private record struct CompilationData(
+        IAssemblySymbol Assembly,
+        INamedTypeSymbol AssemblyAttribute,
+        INamedTypeSymbol MethodAttribute,
+        string? AssemblyName);
 }
