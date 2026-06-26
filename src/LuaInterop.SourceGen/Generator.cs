@@ -89,41 +89,6 @@ internal class Generator : IIncrementalGenerator
                 // Todo: Disallow methods with the same names/function names.
             }
 
-            string str = TryGetAttributeNamedArgument(matchingAttribute, "Number", out int value) ? value.ToString() : "FAILED";
-
-            string abc(IMethodSymbol symbol)
-            {
-                if (TryGetAttributeValue(symbol, methodAttribute, _luaFunctionAttributeNameArgumentName, out string? abc))
-                {
-                    return abc ?? "NULL";
-                }
-                return "FALSE";
-            }
-
-            // language=c#
-            string src = $$"""
-                namespace Demo.Marker.{{assembly.Name}};
-
-                /*
-                > {{assemblyAttribute.Name}} : {{str}}
-                > {{assembly.Name}}
-                */
-
-                /*
-                {{string.Join("\r\n", methodSymbols.Select(x => abc(x)))}}
-                */
-
-                public static class Generated2
-                {
-                    public static void SayHello()
-                    {
-                        global::System.Console.WriteLine("Hello, World!");
-                    }
-                }
-                """;
-
-            ctx.AddSource($"{compilationData.Assembly.Name}.Test2.g.cs", src);
-
             CompilationUnitSyntax compilationUnit = CreateCompilationUnit(methodSymbols, assemblyAttribute, methodAttribute).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
             ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText());
