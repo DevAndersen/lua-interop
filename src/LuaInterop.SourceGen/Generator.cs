@@ -15,9 +15,11 @@ internal class Generator : IIncrementalGenerator
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
     private const string _luaInteropTypeFullName = "global::LuaInterop.Native.Lua";
     private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
+    private const string _luaPushHelperTypeFullName = "global::LuaInterop.LuaPushHelper";
     private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
     private const string _nintFullName = "global::System.IntPtr";
+    private const string _returnVariableName = "returnedValue";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -83,6 +85,8 @@ internal class Generator : IIncrementalGenerator
                 {
                     // Todo: Disallow methods with unmappable return types.
                 }
+
+                // Todo: Disallow methods with the same names/function names.
             }
 
             string str = TryGetAttributeNamedArgument(matchingAttribute, "Number", out int value) ? value.ToString() : "FAILED";
@@ -236,10 +240,12 @@ internal class Generator : IIncrementalGenerator
 
     private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, INamedTypeSymbol methodAttribute)
     {
+        // Determine function name
         string functionName = TryGetAttributeValue(methodSymbol, methodAttribute, _luaFunctionAttributeNameArgumentName, out string? customFunctionName)
             ? customFunctionName
             : methodSymbol.Name;
 
+        // Method invocation
         return SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -255,6 +261,7 @@ internal class Generator : IIncrementalGenerator
     {
         string containingTypeFullName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         IEnumerable<(LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)> argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead);
+        ExpressionStatementSyntax? pushStatement = GenerateValuePushInvocation(methodSymbol);
 
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
@@ -263,14 +270,34 @@ internal class Generator : IIncrementalGenerator
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
 
-        // Method invocation, RegisterFunction
-        ExpressionStatementSyntax consoleWriteLineStatement = SF.ExpressionStatement(SF.InvocationExpression(
+        // Method invocation
+        InvocationExpressionSyntax wrappedMethodInvocation = SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 SF.IdentifierName(containingTypeFullName),
                 SF.IdentifierName(methodSymbol.Name)),
             SF.ArgumentList([
-                .. argumentReads.Select(x => SF.Argument(SF.IdentifierName(x.ArgumentName)))])));
+                .. argumentReads.Select(x => SF.Argument(SF.IdentifierName(x.ArgumentName)))]));
+
+        StatementSyntax methodInvocation;
+        if (methodSymbol.ReturnsVoid)
+        {
+            // Wrapped void method invocation statement
+            methodInvocation = SF.ExpressionStatement(wrappedMethodInvocation);
+        }
+        else
+        {
+            // Wrapped void method invocation statement with return variable
+            methodInvocation = SF.LocalDeclarationStatement(
+                SF.VariableDeclaration(
+                    SF.IdentifierName(methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+                .WithVariables(
+                    SF.SingletonSeparatedList(
+                    SF.VariableDeclarator(
+                        SF.Identifier(_returnVariableName))
+                .WithInitializer(
+                    SF.EqualsValueClause(wrappedMethodInvocation)))));
+        }
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
@@ -279,36 +306,20 @@ internal class Generator : IIncrementalGenerator
                 SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
                 SF.Literal(1)))]);
 
-        // Method invocation, read argument
-        LocalDeclarationStatementSyntax parameterReadStatement = SF.LocalDeclarationStatement(
-            SF.VariableDeclaration(
-                SF.PredefinedType(
-                    SF.Token(SyntaxKind.StringKeyword)))
-            .WithVariables(
-                SF.SingletonSeparatedList(
-                SF.VariableDeclarator(
-                    SF.Identifier("arg1"))
-            .WithInitializer(
-                SF.EqualsValueClause(
-                    SF.InvocationExpression(
-                        SF.MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            SF.IdentifierName(_luaInteropHelperTypeFullName),
-                            SF.IdentifierName("ReadStringArg")))
-                    .WithArgumentList(parameterReadArguments))))));
-
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(
             SF.LiteralExpression(
                 SyntaxKind.NumericLiteralExpression,
-                SF.Literal(0)))
+                SF.Literal(methodSymbol.ReturnsVoid ? 0 : 1)))
             .WithTrailingTrivia(SF.Comment("// Number of pushed values"));
 
         // Method statements
-        SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
+        StatementSyntax?[] statements = [
             .. argumentReads.Select(x => x.StatementSyntax),
-            consoleWriteLineStatement,
-            returnStatement]);
+            methodInvocation,
+            pushStatement,
+            returnStatement
+        ];
 
         // Method
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
@@ -318,7 +329,7 @@ internal class Generator : IIncrementalGenerator
                     SF.Token(SyntaxKind.PrivateKeyword),
                     SF.Token(SyntaxKind.StaticKeyword)))
                 .WithParameterList(SF.ParameterList(parameterSyntaxList))
-                .WithBody(SF.Block(statementList))
+                .WithBody(SF.Block(SF.List(statements.OfType<StatementSyntax>())))
                 .WithAttributeLists([
                     SF.AttributeList([unmanagedCallersOnlyAttribute])]);
 
@@ -359,6 +370,25 @@ internal class Generator : IIncrementalGenerator
         return (parameterReadStatement, argumentName);
     }
 
+    private static ExpressionStatementSyntax? GenerateValuePushInvocation(IMethodSymbol methodSymbol)
+    {
+        if (methodSymbol.ReturnsVoid)
+        {
+            return null;
+        }
+
+        string pushMethodName = GetPushMethodName(methodSymbol.ReturnType);
+
+        return SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(_luaPushHelperTypeFullName),
+                SF.IdentifierName(pushMethodName)),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.IdentifierName(_returnVariableName))])));
+    }
+
     private static string GetReadMethodName(ITypeSymbol typeSymbol)
     {
         return typeSymbol switch
@@ -370,6 +400,22 @@ internal class Generator : IIncrementalGenerator
             _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "ReadIntegerArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadIntegerArg",
             _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadIntegerArg",
+            _ => "" // Todo: Handle unmappable types
+        };
+    }
+
+    private static string GetPushMethodName(ITypeSymbol typeSymbol)
+    {
+        return typeSymbol switch // Todo: Does this work correctly for nullable values?
+        {
+            _ when typeSymbol.SpecialType == SpecialType.System_String => "PushString",
+            _ when typeSymbol.SpecialType == SpecialType.System_Double => "PushDouble",
+            _ when typeSymbol.SpecialType == SpecialType.System_Single => "PushFloat",
+            _ when typeSymbol.SpecialType == SpecialType.System_Byte => "PushByte",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int16 => "PushShort",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "PushInt",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "PushLong",
+            _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "PushBoolean",
             _ => "" // Todo: Handle unmappable types
         };
     }

@@ -56,6 +56,20 @@ public static unsafe class EntryPoint
         Console.WriteLine("Work 2 being done");
     }
 
+    [LuaFunction()]
+    public static int DoWork3()
+    {
+        Console.WriteLine("Work 3 being done");
+        return 4;
+    }
+
+    [LuaFunction()]
+    public static int DoWork4(string text)
+    {
+        Console.WriteLine($"Work 4 being done, the text is \"{text}\"");
+        return 4;
+    }
+
     [UnmanagedCallersOnly]
     private static int SayMessage(nint luaStatePtr)
     {
