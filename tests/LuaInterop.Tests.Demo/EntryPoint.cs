@@ -1,6 +1,6 @@
 using LuaInterop.Attributes;
 
-[assembly: LuaOpen(Number = 12)]
+[assembly: LuaOpen]
 
 namespace LuaInterop.Tests.Demo;
 
