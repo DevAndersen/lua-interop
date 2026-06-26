@@ -21,6 +21,7 @@ internal class Generator : IIncrementalGenerator
     private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
     private const string _nintFullName = "global::System.IntPtr";
     private const string _returnVariableName = "returnedValue";
+    private const string _luaOpenClassName = "LuaEntryPoint";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -142,7 +143,7 @@ internal class Generator : IIncrementalGenerator
             SF.Token(SyntaxKind.StaticKeyword));
 
         // Class
-        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration("DemoClass")
+        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(_luaOpenClassName)
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
                 GenerateLuaOpenMethod(methodSymbols, methodAttribute, assemblyName),
