@@ -59,7 +59,7 @@ internal class Generator : IIncrementalGenerator
             (ImmutableArray<IMethodSymbol?> nullableMethodSymbols, CompilationData compilationData) = data;
             (IAssemblySymbol assembly, INamedTypeSymbol assemblyAttribute, INamedTypeSymbol methodAttribute, string? assemblyName) = compilationData;
 
-            IEnumerable<IMethodSymbol> methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>();
+            IMethodSymbol[] methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>().ToArray();
 
             if (compilationData == default)
             {
@@ -136,7 +136,7 @@ internal class Generator : IIncrementalGenerator
         return false;
     }
 
-    private static CompilationUnitSyntax CreateCompilationUnit(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
+    private static CompilationUnitSyntax CreateCompilationUnit(IMethodSymbol[] methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
     {
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
@@ -161,7 +161,7 @@ internal class Generator : IIncrementalGenerator
             .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
     }
 
-    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IEnumerable<IMethodSymbol> methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
+    private static MethodDeclarationSyntax GenerateLuaOpenMethod(IMethodSymbol[] methodSymbols, INamedTypeSymbol methodAttribute, string assemblyName)
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
@@ -175,7 +175,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName("CreateTable")),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName("luaState")),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Count())))])));
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Length)))])));
 
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
@@ -238,7 +238,7 @@ internal class Generator : IIncrementalGenerator
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol)
     {
         string containingTypeFullName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        IEnumerable<(LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)> argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead);
+        (LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)[] argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead).ToArray();
         ExpressionStatementSyntax? pushStatement = GenerateValuePushInvocation(methodSymbol);
 
         // Parameters
@@ -276,13 +276,6 @@ internal class Generator : IIncrementalGenerator
                 .WithInitializer(
                     SF.EqualsValueClause(wrappedMethodInvocation)))));
         }
-
-        // Method invocation arguments, read argument
-        ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
-            SF.Argument(SF.IdentifierName("luaState")),
-            SF.Argument(
-                SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
-                SF.Literal(1)))]);
 
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(
