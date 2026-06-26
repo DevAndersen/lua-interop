@@ -73,9 +73,7 @@ public static unsafe class EntryPoint
     [LuaFunction]
     public static int Addition(int a, int b)
     {
-        int sum = a + b;
-        Console.WriteLine($"Performing addition: {a} + {b} = {sum}");
-        return sum;
+        return a + b;
     }
 
     [UnmanagedCallersOnly]
