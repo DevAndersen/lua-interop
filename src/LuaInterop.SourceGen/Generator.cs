@@ -23,7 +23,7 @@ internal class Generator : IIncrementalGenerator
     private const string _nintFullName = "global::System.IntPtr";
     private const string _returnVariableName = "returnedValue";
     private const string _luaOpenClassName = "LuaEntryPoint";
-
+    private const string _luaStateVariableName = "luaState";
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
@@ -165,7 +165,7 @@ internal class Generator : IIncrementalGenerator
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName))]);
+            SF.Parameter(SF.Identifier(_luaStateVariableName)).WithType(SF.IdentifierName(_nintFullName))]);
 
         // Method invocation, Lua.CreateTable
         ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
@@ -174,7 +174,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName(_luaInteropHelperTypeFullName),
                 SF.IdentifierName("CreateTable")),
             SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.IdentifierName(_luaStateVariableName)),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Length)))])));
 
         // Return statement
@@ -230,7 +230,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName(_luaInteropHelperTypeFullName),
                 SF.IdentifierName("RegisterFunction")),
             SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.IdentifierName(_luaStateVariableName)),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
                 SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodSymbol.Name)))])));
     }
@@ -243,7 +243,7 @@ internal class Generator : IIncrementalGenerator
 
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier("luaState")).WithType(SF.IdentifierName(_nintFullName))]);
+            SF.Parameter(SF.Identifier(_luaStateVariableName)).WithType(SF.IdentifierName(_nintFullName))]);
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
@@ -316,7 +316,7 @@ internal class Generator : IIncrementalGenerator
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
-            SF.Argument(SF.IdentifierName("luaState")),
+            SF.Argument(SF.IdentifierName(_luaStateVariableName)),
             SF.Argument(
                 SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
                 SF.Literal(luaIndex)))]);
@@ -357,7 +357,7 @@ internal class Generator : IIncrementalGenerator
                 SF.IdentifierName(_luaPushHelperTypeFullName),
                 SF.IdentifierName(pushMethodName)),
             SF.ArgumentList([
-                SF.Argument(SF.IdentifierName("luaState")),
+                SF.Argument(SF.IdentifierName(_luaStateVariableName)),
                 SF.Argument(SF.IdentifierName(_returnVariableName))])));
     }
 
