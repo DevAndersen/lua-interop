@@ -50,6 +50,6 @@ public static class LuaReadHelper
 
     public static bool ReadBoolean(nint luaStatePtr, int argumentIndex)
     {
-        throw new NotImplementedException(); // Todo: Read boolean from Lua.
+        return Lua.ToBoolean(luaStatePtr, argumentIndex);
     }
 }

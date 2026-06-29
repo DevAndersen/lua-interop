@@ -63,4 +63,23 @@ public class ParameterTests
         // Assert
         Assert.False(result.IsSuccessful);
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ReadWriteBoolean_ReturnsExpectedValue(bool value)
+    {
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadWriteBoolean({value.ToString().ToLower()})
+
+            -- Assert
+            assert(type(result) == "boolean")
+            print(result)
+            """);
+
+        // Assert
+        Assert.Equal(value, bool.Parse(result.StandardOutput.Trim(Environment.NewLine)));
+    }
 }

@@ -40,4 +40,10 @@ public static class EntryPoint
     {
         return a + b;
     }
+
+    [LuaFunction]
+    public static bool ReadWriteBoolean(bool value)
+    {
+        return value;
+    }
 }

@@ -28,4 +28,10 @@ internal static unsafe partial class Lua
     public static partial lua_Number CheckNumber(
         lua_State L,
         int arg);
+
+    [LibraryImport(Library, EntryPoint = "lua_toboolean")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ToBoolean(
+        lua_State L,
+        int index);
 }
