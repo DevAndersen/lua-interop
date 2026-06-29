@@ -24,6 +24,7 @@ internal class Generator : IIncrementalGenerator
     private const string _returnVariableName = "returnedValue";
     private const string _luaOpenClassName = "LuaEntryPoint";
     private const string _luaStateVariableName = "luaState";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
@@ -397,6 +398,16 @@ internal class Generator : IIncrementalGenerator
 
     private static string GetReadMethodName(ITypeSymbol typeSymbol)
     {
+        // Check for nullable value types.
+        if (typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
+        {
+            if (argumentType.SpecialType == SpecialType.System_Boolean)
+            {
+                return "ReadNullableBoolean";
+            }
+            return "TODO_NULLABLE_" + GetReadMethodName(argumentType); // Todo: Debug example
+        }
+
         return typeSymbol switch
         {
             _ when typeSymbol.SpecialType == SpecialType.System_String => "ReadString",
@@ -413,6 +424,12 @@ internal class Generator : IIncrementalGenerator
 
     private static string GetPushMethodName(ITypeSymbol typeSymbol)
     {
+        // Support nullable parameters
+        if (typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
+        {
+            return GetPushMethodName(argumentType);
+        }
+
         return typeSymbol switch // Todo: Does this work correctly for nullable values?
         {
             _ when typeSymbol.SpecialType == SpecialType.System_String => "PushString",

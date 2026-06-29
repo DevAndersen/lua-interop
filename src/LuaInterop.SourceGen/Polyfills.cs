@@ -59,3 +59,59 @@ namespace System.Diagnostics.CodeAnalysis
         public bool ReturnValue { get; }
     }
 }
+
+namespace System
+{
+    /// <summary>
+    /// Makes index syntax work on .NET Standard 2.0.
+    /// </summary>
+    internal readonly struct Index
+    {
+        private readonly int _value;
+
+        public Index(int value, bool fromEnd = false)
+        {
+            if (value < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            if (fromEnd)
+            {
+                _value = ~value;
+            }
+            else
+            {
+                _value = value;
+            }
+        }
+
+        public bool IsFromEnd => _value < 0;
+
+        public int GetOffset(int length)
+        {
+            int offset = _value;
+            if (IsFromEnd)
+            {
+                offset += length + 1;
+            }
+            return offset;
+        }
+    }
+
+    /// <summary>
+    /// Makes range syntax work on .NET Standard 2.0.
+    /// </summary>
+    internal readonly struct Range
+    {
+        public Index Start { get; }
+
+        public Index End { get; }
+
+        public Range(Index start, Index end)
+        {
+            Start = start;
+            End = end;
+        }
+    }
+}

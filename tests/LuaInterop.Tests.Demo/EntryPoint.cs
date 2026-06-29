@@ -46,4 +46,10 @@ public static class EntryPoint
     {
         return value;
     }
+
+    [LuaFunction]
+    public static bool? ReadWriteNullableBoolean(bool? value)
+    {
+        return value;
+    }
 }

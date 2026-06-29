@@ -52,4 +52,14 @@ public static class LuaReadHelper
     {
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
     }
+
+    public static bool? ReadNullableBoolean(nint luaStatePtr, int argumentIndex)
+    {
+        if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
+        {
+            return null;
+        }
+
+        return Lua.ToBoolean(luaStatePtr, argumentIndex);
+    }
 }

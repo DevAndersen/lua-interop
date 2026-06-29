@@ -16,7 +16,7 @@ internal static unsafe partial class Lua
 
     [LibraryImport(Library, EntryPoint = "luaL_checkstring", StringMarshalling = StringMarshalling.Utf8)]
     public static partial byte* CheckString(
-        lua_State  L,
+        lua_State L,
         int arg);
 
     [LibraryImport(Library, EntryPoint = "luaL_checkinteger")]
@@ -32,6 +32,11 @@ internal static unsafe partial class Lua
     [LibraryImport(Library, EntryPoint = "lua_toboolean")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool ToBoolean(
+        lua_State L,
+        int index);
+
+    [LibraryImport(Library, EntryPoint = "lua_type")]
+    public static partial LuaType Type(
         lua_State L,
         int index);
 }
