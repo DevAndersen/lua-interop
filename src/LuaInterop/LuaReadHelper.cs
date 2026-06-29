@@ -5,7 +5,7 @@ namespace LuaInterop;
 
 public static class LuaReadHelper
 {
-    public static unsafe string ReadString(nint luaStatePtr, int argumentIndex)
+    public static unsafe string ReadString(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         byte* ptr = Lua.CheckLString(luaStatePtr, argumentIndex, out nuint length);
 
@@ -18,42 +18,42 @@ public static class LuaReadHelper
         return Encoding.UTF8.GetString(bytes);
     }
 
-    public static long ReadLong(nint luaStatePtr, int argumentIndex)
+    public static long ReadLong(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         return Lua.CheckInteger(luaStatePtr, argumentIndex);
     }
 
-    public static int ReadInt(nint luaStatePtr, int argumentIndex)
+    public static int ReadInt(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        return checked((int)ReadLong(luaStatePtr, argumentIndex));
+        return checked((int)ReadLong(luaStatePtr, argumentIndex, parameterName));
     }
 
-    public static short ReadShort(nint luaStatePtr, int argumentIndex)
+    public static short ReadShort(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        return checked((short)ReadLong(luaStatePtr, argumentIndex));
+        return checked((short)ReadLong(luaStatePtr, argumentIndex, parameterName));
     }
 
-    public static byte ReadByte(nint luaStatePtr, int argumentIndex)
+    public static byte ReadByte(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        return checked((byte)ReadLong(luaStatePtr, argumentIndex));
+        return checked((byte)ReadLong(luaStatePtr, argumentIndex, parameterName));
     }
 
-    public static double ReadDouble(nint luaStatePtr, int argumentIndex)
+    public static double ReadDouble(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         return Lua.CheckNumber(luaStatePtr, argumentIndex);
     }
 
-    public static float ReadFloat(nint luaStatePtr, int argumentIndex)
+    public static float ReadFloat(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        return checked((float)ReadDouble(luaStatePtr, argumentIndex));
+        return checked((float)ReadDouble(luaStatePtr, argumentIndex, parameterName));
     }
 
-    public static bool ReadBoolean(nint luaStatePtr, int argumentIndex)
+    public static bool ReadBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
     }
 
-    public static bool? ReadNullableBoolean(nint luaStatePtr, int argumentIndex)
+    public static bool? ReadNullableBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
         {

@@ -319,8 +319,13 @@ internal class Generator : IIncrementalGenerator
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
             SF.Argument(SF.IdentifierName(_luaStateVariableName)),
             SF.Argument(
-                SF.LiteralExpression(SyntaxKind.NumericLiteralExpression,
-                SF.Literal(luaIndex)))]);
+                SF.LiteralExpression(
+                    SyntaxKind.NumericLiteralExpression,
+                    SF.Literal(luaIndex))),
+            SF.Argument(
+                SF.LiteralExpression(
+                    SyntaxKind.StringLiteralExpression,
+                    SF.Literal(parameter.Name)))]);
 
         // Method invocation, read argument
         LocalDeclarationStatementSyntax parameterReadStatement = SF.LocalDeclarationStatement(
