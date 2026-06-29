@@ -1,4 +1,5 @@
 ﻿using LuaInterop.Native;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LuaInterop;
@@ -50,12 +51,7 @@ public static class LuaReadHelper
 
     public static bool ReadBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        LuaType type = Lua.Type(luaStatePtr, argumentIndex);
-        if (type != LuaType.LUA_TBOOLEAN)
-        {
-            throw new ArgumentException($"Parameter '{parameterName}' was unexpected type '{type}'.");
-        }
-
+        ThrowIfNotExpectedType(luaStatePtr, argumentIndex, parameterName, LuaType.LUA_TBOOLEAN);
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
     }
 
@@ -67,5 +63,14 @@ public static class LuaReadHelper
         }
 
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
+    }
+
+    private static void ThrowIfNotExpectedType(nint luaStatePtr, int argumentIndex, string parameterName, LuaType expectedType)
+    {
+        LuaType actualType = Lua.Type(luaStatePtr, argumentIndex);
+        if (actualType != expectedType)
+        {
+            throw new ArgumentException($"Parameter '{parameterName}' was unexpected type '{actualType}', expected '{expectedType}'.");
+        }
     }
 }
