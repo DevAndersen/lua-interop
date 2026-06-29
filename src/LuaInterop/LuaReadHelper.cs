@@ -50,6 +50,12 @@ public static class LuaReadHelper
 
     public static bool ReadBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
+        LuaType type = Lua.Type(luaStatePtr, argumentIndex);
+        if (type != LuaType.LUA_TBOOLEAN)
+        {
+            throw new ArgumentException($"Parameter '{parameterName}' was unexpected type '{type}'.");
+        }
+
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
     }
 
