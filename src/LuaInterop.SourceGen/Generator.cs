@@ -101,30 +101,41 @@ internal class Generator : IIncrementalGenerator
 
             // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
-            foreach (IMethodSymbol methodSymbol in methodSymbols)
-            {
-                if (!methodSymbol.IsStatic)
-                {
-                    // Todo: Disallow instanced methods.
-                }
-
-                if (methodSymbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal))
-                {
-                    // Todo: Disallow unreachable methods.
-                }
-
-                if (!IsAllowedReturnType(methodSymbol))
-                {
-                    // Todo: Disallow methods with unmappable return types.
-                }
-
-                // Todo: Disallow methods with the same names/function names.
-            }
+            methodSymbols = FilterMethodSymbols(methodSymbols, ctx).ToArray();
 
             CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
             ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
         });
+    }
+
+    private static IEnumerable<IMethodSymbol> FilterMethodSymbols(IMethodSymbol[] methodSymbols, SourceProductionContext context)
+    {
+        foreach (IMethodSymbol methodSymbol in methodSymbols)
+        {
+            // Disallow instanced methods.
+            if (!methodSymbol.IsStatic)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MethodNotStatic, methodSymbol.Locations.FirstOrDefault(), methodSymbol.Locations));
+                continue;
+            }
+
+            // Disallow unreachable methods.
+            if (methodSymbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MethodNotAccessible, methodSymbol.Locations.FirstOrDefault(), methodSymbol.Locations));
+                continue;
+            }
+
+            if (!IsAllowedReturnType(methodSymbol))
+            {
+                // Todo: Disallow methods with unmappable return types.
+            }
+
+            // Todo: Disallow methods with the same names/function names.
+
+            yield return methodSymbol;
+        }
     }
 
     private static bool TryGetAttributeValue<T>(string argumentName, ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, [NotNullWhen(true)] out T? value)
