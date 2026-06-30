@@ -134,7 +134,7 @@ internal class Generator : IIncrementalGenerator
             return false;
         }
 
-        // Disallow methods with unmappable return types.
+        // Disallow unsupported return types.
         if (IsReturnTypeUnsupported(methodSymbol))
         {
             context.ReportDiagnostic(Diagnostic.Create(
@@ -146,7 +146,7 @@ internal class Generator : IIncrementalGenerator
             return false;
         }
 
-        // Disallow unsupported method parameters
+        // Disallow unsupported parameters.
         foreach (IParameterSymbol parameter in methodSymbol.Parameters)
         {
             if (IsParameterUnsupported(parameter))
