@@ -482,9 +482,8 @@ internal class Generator : IIncrementalGenerator
                 return "ReadNullableBoolean";
             }
 
-            // Todo: Debug example
-            // Todo: Store as state and be sure to return null if the type could not be fully mapped.
-            return "TODO_NULLABLE_" + GetReadMethodName(argumentType);
+            // Todo: If the nested call returns null, return null, in order to avoid returning broken method names for unmappable types.
+            return "TODO_NULLABLE_" + GetReadMethodName(argumentType); // Todo: Debug example
         }
 
         return typeSymbol switch
