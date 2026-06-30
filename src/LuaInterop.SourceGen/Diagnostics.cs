@@ -29,4 +29,20 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ReturnTypeNotSupported = new DiagnosticDescriptor(
+        id: "LUA0003",
+        title: "Unsupported Lua function return type",
+        messageFormat: "Unsupported Lua function return type '{0}'",
+        category: _category,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ParameterTypeNotSupported = new DiagnosticDescriptor(
+        id: "LUA0004",
+        title: "Unsupported Lua function parameter type",
+        messageFormat: "Unsupported Lua function parameter type '{0}'",
+        category: _category,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 }

@@ -22,15 +22,15 @@ internal static class Extensions
         }
     }
 
-    extension(ITypeSymbol typeSymbol)
+    extension(ISymbol symbol)
     {
         /// <summary>
-        /// Returns the fully qualified name of <paramref name="typeSymbol"/>.
+        /// Returns the fully qualified name of <paramref name="symbol"/>.
         /// </summary>
         /// <returns></returns>
         public string GetFullName()
         {
-            return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
     }
 }

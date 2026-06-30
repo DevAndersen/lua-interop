@@ -101,7 +101,8 @@ internal class Generator : IIncrementalGenerator
 
             // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
-            methodSymbols = FilterMethodSymbols(methodSymbols, ctx).ToArray();
+            // Validate methods.
+            methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, ctx)).ToArray();
 
             CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
@@ -109,33 +110,60 @@ internal class Generator : IIncrementalGenerator
         });
     }
 
-    private static IEnumerable<IMethodSymbol> FilterMethodSymbols(IMethodSymbol[] methodSymbols, SourceProductionContext context)
+    private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context)
     {
-        foreach (IMethodSymbol methodSymbol in methodSymbols)
+        // Disallow instanced methods.
+        if (!methodSymbol.IsStatic)
         {
-            // Disallow instanced methods.
-            if (!methodSymbol.IsStatic)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MethodNotStatic, methodSymbol.Locations.FirstOrDefault(), methodSymbol.Locations));
-                continue;
-            }
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.MethodNotStatic,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
 
-            // Disallow unreachable methods.
-            if (methodSymbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(Diagnostics.MethodNotAccessible, methodSymbol.Locations.FirstOrDefault(), methodSymbol.Locations));
-                continue;
-            }
-
-            if (!IsAllowedReturnType(methodSymbol))
-            {
-                // Todo: Disallow methods with unmappable return types.
-            }
-
-            // Todo: Disallow methods with the same names/function names.
-
-            yield return methodSymbol;
+            return false;
         }
+
+        // Disallow unreachable methods.
+        if (methodSymbol.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.MethodNotAccessible,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
+
+            return false;
+        }
+
+        // Disallow methods with unmappable return types.
+        if (!methodSymbol.ReturnsVoid && GetPushMethodName(methodSymbol.ReturnType) == null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ReturnTypeNotSupported,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations,
+                methodSymbol.ReturnType.GetFullName()));
+
+            return false;
+        }
+
+        // Disallow unsupported method parameters
+        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        {
+            if (GetReadMethodName(parameter.Type) == null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.ParameterTypeNotSupported,
+                    methodSymbol.Locations.FirstOrDefault(),
+                    methodSymbol.Locations,
+                    parameter.Type.GetFullName()));
+
+                return false;
+            }
+        }
+
+        // Todo: Disallow methods with the same names/function names.
+
+        return true;
     }
 
     private static bool TryGetAttributeValue<T>(string argumentName, ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, [NotNullWhen(true)] out T? value)
@@ -350,6 +378,9 @@ internal class Generator : IIncrementalGenerator
         string argumentName = $"arg{luaIndex}";
         string fullTypeName = parameter.Type.GetFullName();
 
+        string readMethodName = GetReadMethodName(parameter.Type)
+            ?? throw new Exception($"LuaInterop failed, {nameof(GetReadMethodName)} returned null for argument '{argumentName}'"); // Should never happen, check performed earlier.;
+
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
             SF.Argument(SF.IdentifierName(_luaStateVariableName)),
@@ -376,7 +407,7 @@ internal class Generator : IIncrementalGenerator
                         SF.MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
                             SF.IdentifierName(_luaReadHelperTypeFullName),
-                            SF.IdentifierName(GetReadMethodName(parameter.Type))))
+                            SF.IdentifierName(readMethodName)))
                     .WithArgumentList(parameterReadArguments))))))
             .WithTrailingTrivia(SF.Comment($"// Parameter \"{parameter.Name}\""));
 
@@ -393,7 +424,8 @@ internal class Generator : IIncrementalGenerator
                 SF.Literal(0));
         }
 
-        string pushMethodName = GetPushMethodName(methodSymbol.ReturnType);
+        string pushMethodName = GetPushMethodName(methodSymbol.ReturnType)
+            ?? throw new Exception($"LuaInterop failed, {nameof(GetPushMethodName)} returned null for method '{methodSymbol.GetFullName()}'"); // Should never happen, check performed earlier.
 
         // Invocation expression, push method
         return SF.InvocationExpression(
@@ -440,7 +472,7 @@ internal class Generator : IIncrementalGenerator
             """);
     }
 
-    private static string GetReadMethodName(ITypeSymbol typeSymbol)
+    private static string? GetReadMethodName(ITypeSymbol typeSymbol)
     {
         // Check for nullable value types.
         if (typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
@@ -449,7 +481,10 @@ internal class Generator : IIncrementalGenerator
             {
                 return "ReadNullableBoolean";
             }
-            return "TODO_NULLABLE_" + GetReadMethodName(argumentType); // Todo: Debug example
+
+            // Todo: Debug example
+            // Todo: Store as state and be sure to return null if the type could not be fully mapped.
+            return "TODO_NULLABLE_" + GetReadMethodName(argumentType);
         }
 
         return typeSymbol switch
@@ -462,11 +497,11 @@ internal class Generator : IIncrementalGenerator
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "ReadInt",
             _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "ReadLong",
             _ when typeSymbol.SpecialType == SpecialType.System_Boolean => "ReadBoolean",
-            _ => "" // Todo: Handle unmappable types
+            _ => null
         };
     }
 
-    private static string GetPushMethodName(ITypeSymbol typeSymbol)
+    private static string? GetPushMethodName(ITypeSymbol typeSymbol)
     {
         // Support nullable parameters
         if (typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
@@ -484,23 +519,13 @@ internal class Generator : IIncrementalGenerator
             _ when typeSymbol.SpecialType == SpecialType.System_Int32 => "PushInt",
             _ when typeSymbol.SpecialType == SpecialType.System_Int64 => "PushLong",
             _ when typeSymbol.SpecialType == SpecialType.System_Boolean => "PushBoolean",
-            _ => "" // Todo: Handle unmappable types
+            _ => null
         };
     }
 
-    private static bool IsAllowedReturnType(IMethodSymbol methodSymbol)
+    private static bool IsAllowedParameterType(IParameterSymbol parameterSymbol)
     {
-        ITypeSymbol returnType = methodSymbol.ReturnType;
-
-        return methodSymbol.ReturnsVoid
-            || returnType.SpecialType == SpecialType.System_String
-            || returnType.SpecialType == SpecialType.System_Double
-            || returnType.SpecialType == SpecialType.System_Single
-            || returnType.SpecialType == SpecialType.System_Byte
-            || returnType.SpecialType == SpecialType.System_Int16
-            || returnType.SpecialType == SpecialType.System_Int32
-            || returnType.SpecialType == SpecialType.System_Int64
-            || returnType.SpecialType == SpecialType.System_Boolean;
+        return true; // Todo: Validate parameter
     }
 
     /// <summary>
