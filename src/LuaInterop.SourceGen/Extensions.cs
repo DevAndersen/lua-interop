@@ -13,7 +13,7 @@ internal static class Extensions
                 return type;
             }
 
-            throw new Exception($"Failed to find special type '{specialType}' in type dictionary."); // Todo: Find an appropriate exception type.
+            throw new KeyNotFoundException($"Failed to find special type '{specialType}' in type dictionary.");
         }
 
         public string GetNameOrThrow(SpecialType specialType)
