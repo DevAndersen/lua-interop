@@ -4,7 +4,7 @@ namespace LuaInterop;
 
 public static class LuaPushHelper
 {
-    public static void PushString(nint luaState, string? value)
+    public static int PushString(nint luaState, string? value)
     {
         if (value == null)
         {
@@ -14,41 +14,50 @@ public static class LuaPushHelper
         {
             Lua.PushString(luaState, value);
         }
+
+        return 1;
     }
 
-    public static void PushLong(nint luaState, long? value)
+    public static int PushLong(nint luaState, long? value)
     {
         PushNullable(luaState, value, Lua.PushInteger);
+        return 1;
     }
 
-    public static void PushInt(nint luaState, int? value)
+    public static int PushInt(nint luaState, int? value)
     {
         PushLong(luaState, value);
+        return 1;
     }
 
-    public static void PushShort(nint luaState, short? value)
+    public static int PushShort(nint luaState, short? value)
     {
         PushLong(luaState, value);
+        return 1;
     }
 
-    public static void PushByte(nint luaState, byte? value)
+    public static int PushByte(nint luaState, byte? value)
     {
         PushLong(luaState, value);
+        return 1;
     }
 
-    public static void PushDouble(nint luaState, double? value)
+    public static int PushDouble(nint luaState, double? value)
     {
         PushNullable(luaState, value, Lua.PushNumber);
+        return 1;
     }
 
-    public static void PushFloat(nint luaState, float? value)
+    public static int PushFloat(nint luaState, float? value)
     {
         PushFloat(luaState, value);
+        return 1;
     }
 
-    public static void PushBoolean(nint luaState, bool? value)
+    public static int PushBoolean(nint luaState, bool? value)
     {
         PushNullable(luaState, value, Lua.PushBoolean);
+        return 1;
     }
 
     private static void PushNullable<T>(nint luaState, T? value, Action<nint, T> func) where T : struct
