@@ -141,7 +141,19 @@ internal class Generator : IIncrementalGenerator
                 Diagnostics.ReturnTypeNotSupported,
                 methodSymbol.Locations.FirstOrDefault(),
                 methodSymbol.Locations,
-                methodSymbol.ReturnType.GetFullName()));
+                methodSymbol.ReturnType.Name));
+
+            return false;
+        }
+
+        // Disallow inaccessible containing types.
+        if (AreContainingTypesInaccessible(methodSymbol.ContainingType, out ITypeSymbol? problematicTypeSymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ContainingTypeNotAccessible,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations,
+                problematicTypeSymbol.Name));
 
             return false;
         }
@@ -155,7 +167,7 @@ internal class Generator : IIncrementalGenerator
                     Diagnostics.ParameterTypeNotSupported,
                     methodSymbol.Locations.FirstOrDefault(),
                     methodSymbol.Locations,
-                    parameter.Type.GetFullName()));
+                    parameter.Type.Name));
 
                 return false;
             }
@@ -531,6 +543,33 @@ internal class Generator : IIncrementalGenerator
     private static bool IsParameterUnsupported(IParameterSymbol parameterSymbol)
     {
         return GetReadMethodName(parameterSymbol.Type) == null;
+    }
+
+    private static bool AreContainingTypesInaccessible(ITypeSymbol? typeSymbol, [NotNullWhen(true)] out ITypeSymbol? problematicTypeSymbol)
+    {
+        // Check if containing type is null (no problem).
+        if (typeSymbol == null)
+        {
+            problematicTypeSymbol = null;
+            return false;
+        }
+
+        // Check if containing type has unsupported accessibility (problem).
+        if (typeSymbol is { DeclaredAccessibility: not (Accessibility.Public or Accessibility.Internal) })
+        {
+            problematicTypeSymbol = typeSymbol;
+            return true;
+        }
+
+        // Check if containing type is itself contained within a type (potential problem).
+        if (typeSymbol?.ContainingType != null)
+        {
+            return AreContainingTypesInaccessible(typeSymbol.ContainingType, out problematicTypeSymbol);
+        }
+
+        // Type has supported accessibility and is not contained within another type (no problem).
+        problematicTypeSymbol = null;
+        return false;
     }
 
     /// <summary>

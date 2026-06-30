@@ -9,3 +9,4 @@ LUA0001 | LUA | Warning | Lua function must be static
 LUA0002 | LUA | Warning | Lua function must be either 'public' or 'internal'
 LUA0003 | LUA | Warning | Unsupported Lua function return type
 LUA0004 | LUA | Warning | Unsupported Lua function parameter type
+LUA0005 | LUA | Warning | Lua function contained in type not marked as either 'public' or 'internal'

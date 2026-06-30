@@ -45,4 +45,12 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ContainingTypeNotAccessible = new DiagnosticDescriptor(
+        id: "LUA0005",
+        title: "Lua function contained in type not marked as either 'public' or 'internal'",
+        messageFormat: "Lua function contained in type {0} which is not marked as either 'public' or 'internal'",
+        category: _category,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 }
