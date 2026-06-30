@@ -39,4 +39,8 @@ internal static unsafe partial class Lua
     public static partial LuaType Type(
         lua_State L,
         int index);
+
+    [LibraryImport(Library, EntryPoint = "lua_gettop")]
+    public static partial int GetTop(
+        lua_State L);
 }

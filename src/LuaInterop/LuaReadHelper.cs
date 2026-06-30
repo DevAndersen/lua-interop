@@ -1,5 +1,4 @@
 ﻿using LuaInterop.Native;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LuaInterop;
@@ -63,6 +62,11 @@ public static class LuaReadHelper
         }
 
         return Lua.ToBoolean(luaStatePtr, argumentIndex);
+    }
+
+    public static int GetTop(nint luaStatePtr)
+    {
+        return Lua.GetTop(luaStatePtr);
     }
 
     private static void ThrowIfNotExpectedType(nint luaStatePtr, int argumentIndex, string parameterName, LuaType expectedType)
