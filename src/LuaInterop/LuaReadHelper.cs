@@ -56,12 +56,7 @@ public static class LuaReadHelper
 
     public static bool? ReadNullableBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
-        if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
-        {
-            return null;
-        }
-
-        return Lua.ToBoolean(luaStatePtr, argumentIndex);
+        return ReadNullable(luaStatePtr, argumentIndex, Lua.ToBoolean);
     }
 
     public static int GetTop(nint luaStatePtr)
@@ -69,6 +64,32 @@ public static class LuaReadHelper
         return Lua.GetTop(luaStatePtr);
     }
 
+    /// <summary>
+    /// Reads the argument at <paramref name="argumentIndex"/>, with support for reading <c>null</c>.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="luaStatePtr"></param>
+    /// <param name="argumentIndex"></param>
+    /// <param name="nonNullableFunc"></param>
+    /// <returns></returns>
+    private static T? ReadNullable<T>(nint luaStatePtr, int argumentIndex, Func<nint, int, T> nonNullableFunc) where T : struct
+    {
+        if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
+        {
+            return null;
+        }
+
+        return nonNullableFunc(luaStatePtr, argumentIndex);
+    }
+
+    /// <summary>
+    /// Throws an <see cref="ArgumentException"/> if the type of the parameter at <paramref name="argumentIndex"/> is not <paramref name="expectedType"/>.
+    /// </summary>
+    /// <param name="luaStatePtr"></param>
+    /// <param name="argumentIndex"></param>
+    /// <param name="parameterName"></param>
+    /// <param name="expectedType"></param>
+    /// <exception cref="ArgumentException"></exception>
     private static void ThrowIfNotExpectedType(nint luaStatePtr, int argumentIndex, string parameterName, LuaType expectedType)
     {
         LuaType actualType = Lua.Type(luaStatePtr, argumentIndex);
