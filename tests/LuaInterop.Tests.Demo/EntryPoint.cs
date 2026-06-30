@@ -1,6 +1,6 @@
 using LuaInterop.Attributes;
 
-[assembly: LuaOpen]
+[assembly: LuaLibrary]
 
 namespace LuaInterop.Tests.Demo;
 

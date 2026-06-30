@@ -11,7 +11,7 @@ namespace LuaInterop.SourceGen;
 internal class Generator : IIncrementalGenerator
 {
     private const string _generatedCodeNamespace = "LuaInterop.Generated";
-    private const string _luaOpenAttributeFullName = "LuaInterop.Attributes.LuaOpenAttribute";
+    private const string _luaLibraryAttributeFullName = "LuaInterop.Attributes.LuaLibraryAttribute";
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
     private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
@@ -32,7 +32,7 @@ internal class Generator : IIncrementalGenerator
         // Gather compilation data.
         IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select((compilation, _) =>
         {
-            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaOpenAttributeFullName);
+            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaLibraryAttributeFullName);
             if (assemblyAttributeTypeSymbol == null)
             {
                 return default;
