@@ -135,7 +135,7 @@ internal class Generator : IIncrementalGenerator
         }
 
         // Disallow methods with unmappable return types.
-        if (!methodSymbol.ReturnsVoid && GetPushMethodName(methodSymbol.ReturnType) == null)
+        if (IsReturnTypeUnsupported(methodSymbol))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 Diagnostics.ReturnTypeNotSupported,
@@ -149,7 +149,7 @@ internal class Generator : IIncrementalGenerator
         // Disallow unsupported method parameters
         foreach (IParameterSymbol parameter in methodSymbol.Parameters)
         {
-            if (GetReadMethodName(parameter.Type) == null)
+            if (IsParameterUnsupported(parameter))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     Diagnostics.ParameterTypeNotSupported,
@@ -523,9 +523,15 @@ internal class Generator : IIncrementalGenerator
         };
     }
 
-    private static bool IsAllowedParameterType(IParameterSymbol parameterSymbol)
+    private static bool IsReturnTypeUnsupported(IMethodSymbol methodSymbol)
     {
-        return true; // Todo: Validate parameter
+        return !methodSymbol.ReturnsVoid
+            && GetPushMethodName(methodSymbol.ReturnType) == null;
+    }
+
+    private static bool IsParameterUnsupported(IParameterSymbol parameterSymbol)
+    {
+        return GetReadMethodName(parameterSymbol.Type) == null;
     }
 
     /// <summary>
