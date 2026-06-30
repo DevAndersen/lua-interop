@@ -11,7 +11,7 @@ public static class LuaReadHelper
 
         if (ptr == null)
         {
-            throw new Exception(); // Todo: Throw an appropriate exception with message.
+            throw new ArgumentNullException(parameterName, $"Lua string argument '{parameterName}' was null");
         }
 
         Span<byte> bytes = new Span<byte>(ptr, (int)length);

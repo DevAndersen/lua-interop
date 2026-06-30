@@ -15,6 +15,7 @@ internal class Generator : IIncrementalGenerator
     private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
     private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
+    private const string _luaInteropHelperRegisterFunctionMethodName = "RegisterFunction";
     private const string _luaInteropHelperCreateTableMethodName = "CreateTable";
     private const string _luaReadHelperTypeFullName = "global::LuaInterop.LuaReadHelper";
     private const string _luaPushHelperTypeFullName = "global::LuaInterop.LuaPushHelper";
@@ -257,7 +258,7 @@ internal class Generator : IIncrementalGenerator
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 SF.IdentifierName(_luaInteropHelperTypeFullName),
-                SF.IdentifierName("RegisterFunction")),
+                SF.IdentifierName(_luaInteropHelperRegisterFunctionMethodName)),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName(_luaStateVariableName)),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
