@@ -1,5 +1,4 @@
 ﻿using LuaInterop.Native;
-using System.Text;
 
 namespace LuaInterop;
 

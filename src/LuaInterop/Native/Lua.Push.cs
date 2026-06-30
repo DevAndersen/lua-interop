@@ -28,7 +28,7 @@ internal static partial class Lua
     [LibraryImport(Library, EntryPoint = "lua_pushnumber")]
     public static partial void PushNumber(
         lua_State L,
-        lua_Number  n);
+        lua_Number n);
 
     [LibraryImport(Library, EntryPoint = "lua_pushnil")]
     public static partial void PushNil(
