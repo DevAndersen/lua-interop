@@ -21,4 +21,16 @@ internal static class Extensions
             return dictionary.GetOrThrow(specialType).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
     }
+
+    extension(ITypeSymbol typeSymbol)
+    {
+        /// <summary>
+        /// Returns the fully qualified name of <paramref name="typeSymbol"/>.
+        /// </summary>
+        /// <returns></returns>
+        public string GetFullName()
+        {
+            return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+    }
 }

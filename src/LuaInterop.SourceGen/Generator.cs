@@ -267,7 +267,7 @@ internal class Generator : IIncrementalGenerator
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
     {
-        string containingTypeFullName = methodSymbol.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        string containingTypeFullName = methodSymbol.ContainingType.GetFullName();
         (LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)[] argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead).ToArray();
 
         // Parameters
@@ -297,7 +297,7 @@ internal class Generator : IIncrementalGenerator
             // Wrapped void method invocation statement with return variable
             methodInvocation = SF.LocalDeclarationStatement(
                 SF.VariableDeclaration(
-                    SF.IdentifierName(methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+                    SF.IdentifierName(methodSymbol.ReturnType.GetFullName()))
                 .WithVariables(
                     SF.SingletonSeparatedList(
                     SF.VariableDeclarator(
@@ -337,7 +337,7 @@ internal class Generator : IIncrementalGenerator
     {
         int luaIndex = index + 1;
         string argumentName = $"arg{luaIndex}";
-        string fullTypeName = parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        string fullTypeName = parameter.Type.GetFullName();
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
