@@ -7,31 +7,31 @@ internal static class Extensions
     extension(TypeDictionary dictionary)
     {
         /// <summary>
-        /// Attempts to retrieve the value for key <paramref name="specialType"/> in <paramref name="dictionary"/>,
+        /// Attempts to retrieve the value for key <paramref name="typeId"/> in <paramref name="dictionary"/>,
         /// otherwise throws <see cref="KeyNotFoundException"/>.
         /// </summary>
-        /// <param name="specialType"></param>
+        /// <param name="typeId"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public INamedTypeSymbol GetOrThrow(SpecialType specialType)
+        public INamedTypeSymbol GetOrThrow(TypeDictionaryId typeId)
         {
-            if (dictionary.TryGetValue(specialType, out INamedTypeSymbol? type))
+            if (dictionary.TryGetValue(typeId, out INamedTypeSymbol? type))
             {
                 return type;
             }
 
-            throw new KeyNotFoundException($"Failed to find special type '{specialType}' in type dictionary.");
+            throw new KeyNotFoundException($"Failed to find special type '{typeId}' in type dictionary.");
         }
 
         /// <summary>
-        /// Attempts to retrieve the value for key <paramref name="specialType"/> in <paramref name="dictionary"/>,
+        /// Attempts to retrieve the value for key <paramref name="typeId"/> in <paramref name="dictionary"/>,
         /// and determine the fully qualified name of the type, otherwise throws <see cref="KeyNotFoundException"/>.
         /// </summary>
-        /// <param name="specialType"></param>
+        /// <param name="typeId"></param>
         /// <returns></returns>
-        public string GetNameOrThrow(SpecialType specialType)
+        public string GetNameOrThrow(TypeDictionaryId typeId)
         {
-            return dictionary.GetOrThrow(specialType).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return dictionary.GetOrThrow(typeId).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
     }
 

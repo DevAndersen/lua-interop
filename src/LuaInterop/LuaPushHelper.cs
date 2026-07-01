@@ -71,4 +71,43 @@ public static class LuaPushHelper
             func(luaState, value.Value);
         }
     }
+
+    public static void PushDictionary<TKey, TValue>(nint luaState, IDictionary<TKey, TValue> dictionary)
+    {
+        // Todo: Validate key- and value type.
+
+        LuaInteropHelper.CreateTable(luaState, dictionary.Count);
+
+        foreach ((TKey key, TValue value) in dictionary)
+        {
+            SetTableKey(luaState, key);
+            SetTableValue(luaState, key);
+        }
+    }
+
+    private static void SetTableKey<T>(nint luaState, T key)
+    {
+        switch (key)
+        {
+            case int i:
+                Lua.PushInteger(luaState, i);
+                break;
+
+            default:
+                throw new Exception(); // Todo: Throw an appropriate exception with a message.
+        }
+    }
+
+    private static void SetTableValue<T>(nint luaState, T value)
+    {
+        switch (value)
+        {
+            case string s:
+                Lua.SetField(luaState, -2, s);
+                break;
+
+            default:
+                throw new Exception(); // Todo: Throw an appropriate exception with a message.
+        }
+    }
 }

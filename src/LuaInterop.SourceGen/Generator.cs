@@ -27,6 +27,9 @@ internal class Generator : IIncrementalGenerator
     private const string _luaOpenMethodName = "LuaOpen";
     private const string _luaStateVariableName = "luaState";
 
+    private const string _typeMetadataNameDictionary2 = "System.Collections.Generic.IDictionary`2";
+    private const string _typeNotFoundFromMetadataNameExceptionMessageTemplate = "Unable to find type from metadata name '{0}'";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
@@ -48,8 +51,9 @@ internal class Generator : IIncrementalGenerator
 
             TypeDictionary typeDictionary = new TypeDictionary
             {
-                [SpecialType.System_Int32] = compilation.GetSpecialType(SpecialType.System_Int32),
-                [SpecialType.System_IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
+                [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
+                [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
+                [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, _typeMetadataNameDictionary2),
             };
 
             return new CompilationData(
@@ -250,7 +254,7 @@ internal class Generator : IIncrementalGenerator
             SF.Parameter(
                 SF.Identifier(_luaStateVariableName))
             .WithType(
-                SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
+                SF.IdentifierName(typeDictionary.GetNameOrThrow(TypeDictionaryId.IntPtr)))]);
 
         // Method invocation, Lua.CreateTable
         ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(
@@ -332,7 +336,7 @@ internal class Generator : IIncrementalGenerator
             SF.Parameter(
                 SF.Identifier(_luaStateVariableName))
             .WithType(
-                SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
+                SF.IdentifierName(typeDictionary.GetNameOrThrow(TypeDictionaryId.IntPtr)))]);
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
@@ -589,6 +593,12 @@ internal class Generator : IIncrementalGenerator
     private static bool IsNullOrWhiteSpace([NotNullWhen(false)] string? value)
     {
         return string.IsNullOrWhiteSpace(value);
+    }
+
+    private static INamedTypeSymbol GetTypeByMetadataName(Compilation compilation, string typeMetadataName)
+    {
+        return compilation.GetTypeByMetadataName(typeMetadataName)
+            ?? throw new Exception(string.Format(_typeNotFoundFromMetadataNameExceptionMessageTemplate, typeMetadataName));
     }
 
     private record struct CompilationData(
