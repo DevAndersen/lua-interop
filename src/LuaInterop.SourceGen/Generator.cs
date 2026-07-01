@@ -231,7 +231,8 @@ internal class Generator : IIncrementalGenerator
                 .WithLeadingTrivia(GenerateXmlSummary("Contains Lua interoperability logic."));
 
         // Namespace
-        NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(SF.IdentifierName(_generatedCodeNamespace))
+        NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(
+            SF.IdentifierName(_generatedCodeNamespace))
             .AddMembers(classDeclaration);
 
         return SF.CompilationUnit()
@@ -246,20 +247,25 @@ internal class Generator : IIncrementalGenerator
     {
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier(_luaStateVariableName)).WithType(SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
+            SF.Parameter(
+                SF.Identifier(_luaStateVariableName))
+            .WithType(
+                SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
 
         // Method invocation, Lua.CreateTable
-        ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(SF.InvocationExpression(
-            SF.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(_luaInteropHelperTypeFullName),
-                SF.IdentifierName(_luaInteropHelperCreateTableMethodName)),
-            SF.ArgumentList([
-                SF.Argument(SF.IdentifierName(_luaStateVariableName)),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Length)))])));
+        ExpressionStatementSyntax createTableMethodInvocation = SF.ExpressionStatement(
+            SF.InvocationExpression(
+                SF.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SF.IdentifierName(_luaInteropHelperTypeFullName),
+                    SF.IdentifierName(_luaInteropHelperCreateTableMethodName)),
+                SF.ArgumentList([
+                    SF.Argument(SF.IdentifierName(_luaStateVariableName)),
+                    SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Length)))])));
 
         // Return statement
-        ReturnStatementSyntax returnStatement = SF.ReturnStatement(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
+        ReturnStatementSyntax returnStatement = SF.ReturnStatement(
+            SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
             .WithTrailingTrivia(SF.Comment("// Stack index of table"));
 
         // Method statements
@@ -323,7 +329,10 @@ internal class Generator : IIncrementalGenerator
 
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
-            SF.Parameter(SF.Identifier(_luaStateVariableName)).WithType(SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
+            SF.Parameter(
+                SF.Identifier(_luaStateVariableName))
+            .WithType(
+                SF.IdentifierName(typeDictionary.GetNameOrThrow(SpecialType.System_IntPtr)))]);
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
