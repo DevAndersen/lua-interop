@@ -52,4 +52,15 @@ public static class EntryPoint
     {
         return value;
     }
+
+    [LuaFunction]
+    public static Dictionary<int, string> WriteDictionary()
+    {
+        return new Dictionary<int, string>
+        {
+            [1] = "A",
+            [2] = "B",
+            [3] = "C",
+        };
+    }
 }

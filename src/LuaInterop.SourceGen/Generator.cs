@@ -106,7 +106,7 @@ internal class Generator : IIncrementalGenerator
             // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
             // Validate methods.
-            methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, ctx)).ToArray();
+            methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, ctx, typeDictionary)).ToArray();
 
             CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
             SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
@@ -114,7 +114,7 @@ internal class Generator : IIncrementalGenerator
         });
     }
 
-    private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context)
+    private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
     {
         // Disallow instanced methods.
         if (!methodSymbol.IsStatic)
@@ -139,8 +139,24 @@ internal class Generator : IIncrementalGenerator
         }
 
         // Disallow unsupported return types.
-        if (IsReturnTypeUnsupported(methodSymbol))
+        if (IsReturnTypeUnsupported(methodSymbol, typeDictionary))
         {
+            INamedTypeSymbol v1 = typeDictionary.GetOrThrow(TypeDictionaryId.Dictionary2);
+            INamedTypeSymbol v2 = methodSymbol.ReturnType.OriginalDefinition as INamedTypeSymbol ?? throw new Exception();
+
+            bool b = methodSymbol.ReturnType.AllInterfaces.Select(x => x.OriginalDefinition).Contains(v1, SymbolEqualityComparer.Default);
+
+            var v3 = methodSymbol.ReturnType.OriginalDefinition.Equals(v1.OriginalDefinition, SymbolEqualityComparer.Default);
+
+            if (methodSymbol.ReturnType.OriginalDefinition.Equals(v1, SymbolEqualityComparer.Default))
+            {
+
+            }
+
+            if (methodSymbol.ReturnType is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
+            {
+            }
+
             context.ReportDiagnostic(Diagnostic.Create(
                 Diagnostics.ReturnTypeNotSupported,
                 methodSymbol.Locations.FirstOrDefault(),
@@ -372,7 +388,7 @@ internal class Generator : IIncrementalGenerator
 
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(
-            GenerateValuePushInvocation(methodSymbol))
+            GenerateValuePushInvocation(methodSymbol, typeDictionary))
             .WithTrailingTrivia(SF.Comment(methodSymbol.ReturnsVoid ? "// Void method, no values to be pushed" : "// Push number of values"));
 
         // Method statements
@@ -439,7 +455,7 @@ internal class Generator : IIncrementalGenerator
         return (parameterReadStatement, argumentName);
     }
 
-    private static ExpressionSyntax GenerateValuePushInvocation(IMethodSymbol methodSymbol)
+    private static ExpressionSyntax GenerateValuePushInvocation(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
     {
         if (methodSymbol.ReturnsVoid)
         {
@@ -449,7 +465,7 @@ internal class Generator : IIncrementalGenerator
                 SF.Literal(0));
         }
 
-        string pushMethodName = GetPushMethodName(methodSymbol.ReturnType)
+        string pushMethodName = GetPushMethodName(methodSymbol.ReturnType, typeDictionary)
             ?? throw new Exception($"LuaInterop failed, {nameof(GetPushMethodName)} returned null for method '{methodSymbol.GetFullName()}'"); // Should never happen, check performed earlier.
 
         // Invocation expression, push method
@@ -525,12 +541,20 @@ internal class Generator : IIncrementalGenerator
         };
     }
 
-    private static string? GetPushMethodName(ITypeSymbol typeSymbol)
+    private static string? GetPushMethodName(ITypeSymbol typeSymbol, TypeDictionary typeDictionary)
     {
-        // Support nullable parameters
+        // Support nullable parameters.
         if (typeSymbol is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments: [ITypeSymbol argumentType] })
         {
-            return GetPushMethodName(argumentType);
+            return GetPushMethodName(argumentType, typeDictionary);
+        }
+
+        // Support dictionaries.
+        INamedTypeSymbol dictionary2TypeSymbol = typeDictionary.GetOrThrow(TypeDictionaryId.Dictionary2);
+        if (typeSymbol.AllInterfaces.Select(x => x.OriginalDefinition).Contains(dictionary2TypeSymbol, SymbolEqualityComparer.Default))
+        {
+            // Todo: Validate type arguments.
+            return "PushDictionary";
         }
 
         return typeSymbol switch // Todo: Does this work correctly for nullable values?
@@ -547,10 +571,10 @@ internal class Generator : IIncrementalGenerator
         };
     }
 
-    private static bool IsReturnTypeUnsupported(IMethodSymbol methodSymbol)
+    private static bool IsReturnTypeUnsupported(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
     {
         return !methodSymbol.ReturnsVoid
-            && GetPushMethodName(methodSymbol.ReturnType) == null;
+            && GetPushMethodName(methodSymbol.ReturnType, typeDictionary) == null;
     }
 
     private static bool IsParameterUnsupported(IParameterSymbol parameterSymbol)

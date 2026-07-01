@@ -72,7 +72,7 @@ public static class LuaPushHelper
         }
     }
 
-    public static void PushDictionary<TKey, TValue>(nint luaState, IDictionary<TKey, TValue> dictionary)
+    public static int PushDictionary<TKey, TValue>(nint luaState, IDictionary<TKey, TValue> dictionary)
     {
         // Todo: Validate key- and value type.
 
@@ -81,8 +81,10 @@ public static class LuaPushHelper
         foreach ((TKey key, TValue value) in dictionary)
         {
             SetTableKey(luaState, key);
-            SetTableValue(luaState, key);
+            SetTableValue(luaState, value);
         }
+
+        return 1;
     }
 
     private static void SetTableKey<T>(nint luaState, T key)
@@ -94,7 +96,7 @@ public static class LuaPushHelper
                 break;
 
             default:
-                throw new Exception(); // Todo: Throw an appropriate exception with a message.
+                throw new Exception($"Unable to push unsupported table key type '{typeof(T).Name}'"); // Todo: Throw an appropriate exception.
         }
     }
 
@@ -107,7 +109,7 @@ public static class LuaPushHelper
                 break;
 
             default:
-                throw new Exception(); // Todo: Throw an appropriate exception with a message.
+                throw new Exception($"Unable to push unsupported table value type '{typeof(T).Name}'"); // Todo: Throw an appropriate exception.
         }
     }
 }
