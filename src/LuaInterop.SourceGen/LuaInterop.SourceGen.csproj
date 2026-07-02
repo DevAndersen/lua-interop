@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<!-- General -->
 	<PropertyGroup>
 		<LangVersion>14.0</LangVersion>
 		<TargetFramework>netstandard2.0</TargetFramework>
@@ -7,6 +8,7 @@
 		<IsRoslynComponent>true</IsRoslynComponent>
 	</PropertyGroup>
 
+	<!-- Package references -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
 			<PrivateAssets>all</PrivateAssets>

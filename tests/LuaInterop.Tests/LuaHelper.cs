@@ -24,6 +24,7 @@ public static class LuaHelper
 
     public static async Task<ProcessResult> RunLuaScriptResultAsync([StringSyntax(_luaSyntaxName)] string script, int timeoutInSeconds = 3)
     {
+        // language=Lua
         string fullScript = $"""
             local interop = require("luainteropdemo")
             {script}
