@@ -113,11 +113,6 @@ public class ParameterTests
     [Fact]
     public async Task ReadWriteString_Null_ThrowsException()
     {
-        string str = $"""
-            -- Act
-            local result = interop.ReadWriteString({ToLua<string?>(null)})
-            """;
-
         // Act
         LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
             -- Act
@@ -197,7 +192,7 @@ public class ParameterTests
     {
         return value switch
         {
-            null => "nil",
+            null => _luaNil,
             bool b => b.ToString().ToLower(),
             string s => $"\"{s}\"",
             byte or short or int or long => $"{value}",
