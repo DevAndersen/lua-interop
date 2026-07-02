@@ -93,7 +93,7 @@ public class ParameterTests
     [InlineData("")]
     [InlineData("abc")]
     [InlineData("?!$#([{}]})='.;--`")]
-    public async Task ReadWriteString_NotNull_ReturnsExpectedValue(string? value)
+    public async Task ReadWriteString_NotNull_ReturnsExpectedValue(string value)
     {
         // Act
         LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
