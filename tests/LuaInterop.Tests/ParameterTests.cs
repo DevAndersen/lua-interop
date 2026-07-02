@@ -3,6 +3,7 @@
 namespace LuaInterop.Tests;
 
 // Todo: Test source generator itself. Ensure that diagnostics are reported correctly (e.g. nested types).
+// Todo: Test reading and writing strings that contains null characters.
 public class ParameterTests
 {
     private const string _luaBoolean = "boolean";

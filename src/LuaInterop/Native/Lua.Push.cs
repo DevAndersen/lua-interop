@@ -33,4 +33,9 @@ internal static partial class Lua
     [LibraryImport(Library, EntryPoint = "lua_pushnil")]
     public static partial void PushNil(
         lua_State L);
+
+    [LibraryImport(Library, EntryPoint = "lua_rawset")]
+    public static partial void RawSet(
+        lua_State L,
+        int index);
 }

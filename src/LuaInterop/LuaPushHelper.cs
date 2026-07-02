@@ -1,4 +1,5 @@
 ﻿using LuaInterop.Native;
+using System.Numerics;
 
 namespace LuaInterop;
 
@@ -12,7 +13,7 @@ public static class LuaPushHelper
         }
         else
         {
-            Lua.PushString(luaState, value);
+            Lua.PushString(luaState, value); // Todo: lua_pushlstring might be more approproate, as it supports embedded null characters.
         }
 
         return 1;
@@ -60,6 +61,12 @@ public static class LuaPushHelper
         return 1;
     }
 
+    public static int PushNull(nint luaState)
+    {
+        Lua.PushNil(luaState);
+        return 1;
+    }
+
     private static void PushNullable<T>(nint luaState, T? value, Action<nint, T> func) where T : struct
     {
         if (value == null)
@@ -76,40 +83,33 @@ public static class LuaPushHelper
     {
         // Todo: Validate key- and value type.
 
-        LuaInteropHelper.CreateTable(luaState, dictionary.Count);
+        LuaInteropHelper.CreateTable(luaState, 0);
 
         foreach ((TKey key, TValue value) in dictionary)
         {
-            SetTableKey(luaState, key);
-            SetTableValue(luaState, value);
+            int tableStackPosition = -1;
+            tableStackPosition -= PushTableValue(luaState, key);
+            tableStackPosition -= PushTableValue(luaState, value);
+            Lua.RawSet(luaState, tableStackPosition);
         }
 
         return 1;
     }
 
-    private static void SetTableKey<T>(nint luaState, T key)
+    private static int PushTableValue<T>(nint luaState, T value)
     {
-        switch (key)
+        return value switch
         {
-            case int i:
-                Lua.PushInteger(luaState, i);
-                break;
-
-            default:
-                throw new Exception($"Unable to push unsupported table key type '{typeof(T).Name}'"); // Todo: Throw an appropriate exception.
-        }
-    }
-
-    private static void SetTableValue<T>(nint luaState, T value)
-    {
-        switch (value)
-        {
-            case string s:
-                Lua.SetField(luaState, -2, s);
-                break;
-
-            default:
-                throw new Exception($"Unable to push unsupported table value type '{typeof(T).Name}'"); // Todo: Throw an appropriate exception.
-        }
+            null => PushNull(luaState),
+            byte v => PushByte(luaState, v),
+            short v => PushShort(luaState, v),
+            int v => PushInt(luaState, v),
+            long v => PushLong(luaState, v),
+            float v => PushFloat(luaState, v),
+            double v => PushDouble(luaState, v),
+            bool v => PushBoolean(luaState, v),
+            string v => PushString(luaState, v),
+            _ => throw new Exception(), // Todo: Throw an appropriate exception with a message.
+        };
     }
 }
