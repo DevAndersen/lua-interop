@@ -1,5 +1,4 @@
 ﻿using LuaInterop.Native;
-using System.Numerics;
 
 namespace LuaInterop;
 
@@ -13,7 +12,7 @@ public static class LuaPushHelper
         }
         else
         {
-            Lua.PushString(luaState, value); // Todo: lua_pushlstring might be more approproate, as it supports embedded null characters.
+            Lua.PushLString(luaState, value, (nuint)value.Length);
         }
 
         return 1;

@@ -54,6 +54,18 @@ public static class EntryPoint
     }
 
     [LuaFunction]
+    public static string? ReadWriteString(string? value)
+    {
+        return value;
+    }
+
+    [LuaFunction]
+    public static string ReadStringWithNullCharacter()
+    {
+        return "abc\0def";
+    }
+
+    [LuaFunction]
     public static Dictionary<int, string> WriteDictionary()
     {
         return new Dictionary<int, string>

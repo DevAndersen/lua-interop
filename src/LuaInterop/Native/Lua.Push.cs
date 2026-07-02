@@ -10,10 +10,11 @@ internal static partial class Lua
         nint fn,
         int n);
 
-    [LibraryImport(Library, EntryPoint = "lua_pushstring", StringMarshalling = StringMarshalling.Utf8)]
-    public static partial nint PushString(
+    [LibraryImport(Library, EntryPoint = "lua_pushlstring", StringMarshalling = StringMarshalling.Utf8)]
+    public static partial nint PushLString(
         lua_State L,
-        string s);
+        string s,
+        size_t len);
 
     [LibraryImport(Library, EntryPoint = "lua_pushboolean")]
     public static partial void PushBoolean(

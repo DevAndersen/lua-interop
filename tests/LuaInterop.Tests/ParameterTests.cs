@@ -90,6 +90,54 @@ public class ParameterTests
     }
 
     [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("abc")]
+    [InlineData("?!$#([{}]})='.;--`")]
+    [InlineData(@"abc\0def")]
+    public async Task ReadWriteString_ReturnsExpectedValue(string? value)
+    {
+        string str = $"""
+            -- Act
+            print({ToLua(value)})
+            """;
+
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadStringWithNullCharacter({ToLua(value)})
+
+            -- Assert
+            assert(type(result) == "string")
+            print(result)
+            """);
+
+        // Assert
+        Assert.True(result.IsSuccessful, result.StandardError);
+        Assert.Equal("abc\0def", result.StandardOutput.Trim(Environment.NewLine));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ReadStringWithNullCharacter_ReturnsStringWithNullCharacter(bool value)
+    {
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadStringWithNullCharacter({ToLua(value)})
+
+            -- Assert
+            assert(type(result) == "string")
+            print(result)
+            """);
+
+        // Assert
+        Assert.True(result.IsSuccessful, result.StandardError);
+        Assert.Equal("abc\0def", result.StandardOutput.Trim(Environment.NewLine));
+    }
+
+    [Theory]
     [InlineData(false, _luaBoolean)]
     [InlineData(true, _luaBoolean)]
     [InlineData(null, _luaNil)]
@@ -116,8 +164,11 @@ public class ParameterTests
     {
         return value switch
         {
-            bool b => b.ToString().ToLower(),
             null => "nil",
+            bool b => b.ToString().ToLower(),
+            string s => $"\"{s}\"",
+            byte or short or int or long => $"{value}",
+            float or double => $"{value.ToString()?.Replace(',', '.')}",
             _ => throw new Exception($"No mapping defined for {typeof(T).FullName}")
         };
     }
