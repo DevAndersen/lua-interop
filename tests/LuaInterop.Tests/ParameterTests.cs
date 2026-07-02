@@ -90,22 +90,15 @@ public class ParameterTests
     }
 
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData("abc")]
     [InlineData("?!$#([{}]})='.;--`")]
-    [InlineData(@"abc\0def")]
-    public async Task ReadWriteString_ReturnsExpectedValue(string? value)
+    public async Task ReadWriteString_NotNull_ReturnsExpectedValue(string? value)
     {
-        string str = $"""
-            -- Act
-            print({ToLua(value)})
-            """;
-
         // Act
         LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
             -- Act
-            local result = interop.ReadStringWithNullCharacter({ToLua(value)})
+            local result = interop.ReadWriteString({ToLua(value)})
 
             -- Assert
             assert(type(result) == "string")
@@ -114,7 +107,47 @@ public class ParameterTests
 
         // Assert
         Assert.True(result.IsSuccessful, result.StandardError);
-        Assert.Equal("abc\0def", result.StandardOutput.Trim(Environment.NewLine));
+        Assert.Equal(value, result.StandardOutput.Trim(Environment.NewLine));
+    }
+
+    [Fact]
+    public async Task ReadWriteString_Null_ThrowsException()
+    {
+        string str = $"""
+            -- Act
+            local result = interop.ReadWriteString({ToLua<string?>(null)})
+            """;
+
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadWriteString({ToLua<string?>(null)})
+            """);
+
+        // Assert
+        Assert.True(!result.IsSuccessful); // Todo: Check if the error is the exception being thrown, not Lua itself failing.
+    }
+
+    [Theory]
+    [InlineData(null)] // Todo: Check if the error is the exception being thrown, not Lua itself failing.
+    [InlineData("")]
+    [InlineData("abc")]
+    [InlineData("?!$#([{}]})='.;--`")]
+    public async Task ReadWriteNullableString_ReturnsExpectedValue(string? value)
+    {
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadWriteNullableString({ToLua(value)})
+
+            -- Assert
+            assert(type(result) == "string")
+            print(result)
+            """);
+
+        // Assert
+        Assert.True(result.IsSuccessful, result.StandardError);
+        Assert.Equal(value, result.StandardOutput.Trim(Environment.NewLine));
     }
 
     [Theory]

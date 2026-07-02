@@ -54,7 +54,13 @@ public static class EntryPoint
     }
 
     [LuaFunction]
-    public static string? ReadWriteString(string? value)
+    public static string ReadWriteString(string value)
+    {
+        return value;
+    }
+
+    [LuaFunction]
+    public static string? ReadWriteNullableString(string? value)
     {
         return value;
     }

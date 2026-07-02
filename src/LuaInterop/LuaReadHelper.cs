@@ -5,6 +5,7 @@ namespace LuaInterop;
 
 public static class LuaReadHelper
 {
+    // Todo: Version of "ReadString" that supports null, maybe a class version of "ReadNullable"?
     public static unsafe string ReadString(nint luaStatePtr, int argumentIndex, string parameterName)
     {
         byte* ptr = Lua.CheckLString(luaStatePtr, argumentIndex, out nuint length);
