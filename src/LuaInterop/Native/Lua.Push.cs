@@ -4,6 +4,11 @@ namespace LuaInterop.Native;
 
 internal static partial class Lua
 {
+    [LibraryImport(Library, EntryPoint = "lua_pushvalue")]
+    public static partial void PushValue(
+        lua_State L,
+        int idx);
+
     [LibraryImport(Library, EntryPoint = "lua_pushcclosure")]
     public static partial void PushCClosure(
         lua_State L,

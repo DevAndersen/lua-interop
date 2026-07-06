@@ -25,4 +25,13 @@ internal static partial class Lua
         lua_State L,
         int idx,
         string k);
+
+    [LibraryImport(Library, EntryPoint = "lua_pcallk")]
+    public static partial LuaStatusCode PCallK(
+        lua_State L,
+        int nargs,
+        int nresults,
+        int msgh,
+        nint ctx,
+        nint k);
 }
