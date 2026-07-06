@@ -37,8 +37,14 @@ public static class LuaInteropHelper
     /// <param name="argumentCount"></param>
     /// <param name="resultCount"></param>
     /// <returns></returns>
-    public static int CallFunction(nint luaStatePtr, int argumentCount, int resultCount)
+    public static void CallFunction(nint luaStatePtr, int argumentCount, int resultCount, string functionName)
     {
-        return (int)Lua.PCallK(luaStatePtr, argumentCount, resultCount, 0, 0, 0);
+        LuaStatusCode statusCode = Lua.PCallK(luaStatePtr, argumentCount, resultCount, 0, 0, 0);
+
+        if (statusCode != LuaStatusCode.LUA_OK)
+        {
+            LuaType err = Lua.Type(luaStatePtr, -1); // Todo: Check if there's an error object, and include it in the exception message.
+            throw new Exception($"{functionName} called Lua function which returned status code {statusCode}"); // Todo: Find an appropriate exception type.
+        }
     }
 }

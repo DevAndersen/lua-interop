@@ -30,7 +30,7 @@ public static class EntryPoint
         int argumentCount = LuaPushHelper.PushInt(luaState, arg * 2);
 
         // Call function.
-        LuaInteropHelper.CallFunction(luaState, argumentCount, 1);
+        LuaInteropHelper.CallFunction(luaState, argumentCount, 1, "Callbacktest"); // Use the registered function name.
 
         // Read function return value.
         int result = LuaReadHelper.ReadInt(luaState, -1, "");
