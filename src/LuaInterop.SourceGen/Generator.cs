@@ -1,47 +1,22 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using static LuaInterop.SourceGen.GeneratorHelper;
 
 namespace LuaInterop.SourceGen;
 
 [Generator(LanguageNames.CSharp)]
 internal class Generator : IIncrementalGenerator
 {
-    private const string _generatedCodeNamespace = "LuaInterop.Generated";
-    private const string _luaLibraryAttributeFullName = "LuaInterop.Attributes.LuaLibraryAttribute";
-    private const string _luaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
-    private const string _luaFunctionAttributeNameArgumentName = "FunctionName";
-    private const string _luaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
-    private const string _luaInteropHelperRegisterFunctionMethodName = "RegisterFunction";
-    private const string _luaInteropHelperCreateTableMethodName = "CreateTable";
-    private const string _luaReadHelperTypeFullName = "global::LuaInterop.LuaReadHelper";
-    private const string _luaPushHelperTypeFullName = "global::LuaInterop.LuaPushHelper";
-    private const string _unmanagedCallersOnlyAttributeFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnly";
-    private const string _generatedCodeAttributeAttributeFullName = "global::System.CodeDom.Compiler.GeneratedCodeAttribute";
-    private const string _unmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
-    private const string _returnVariableName = "returnedValue";
-    private const string _luaOpenClassName = "LuaEntryPoint";
-    private const string _luaOpenMethodName = "LuaOpen";
-    private const string _luaStateVariableName = "luaState";
-
-    private const string _typeMetadataNameDictionary2 = "System.Collections.Generic.IDictionary`2";
-    private const string _typeNotFoundFromMetadataNameExceptionMessageTemplate = "Unable to find type from metadata name '{0}'";
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
         IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select((compilation, _) =>
         {
-            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaLibraryAttributeFullName);
+            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaLibraryAttributeFullName);
             if (assemblyAttributeTypeSymbol == null)
             {
                 return default;
             }
 
-            INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(_luaFunctionAttributeFullName);
+            INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaFunctionAttributeFullName);
             if (methodAttributeTypeSymbol == null)
             {
                 return default;
@@ -53,7 +28,7 @@ internal class Generator : IIncrementalGenerator
             {
                 [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
                 [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
-                [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, _typeMetadataNameDictionary2),
+                [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
             };
 
             return new CompilationData(
@@ -66,7 +41,7 @@ internal class Generator : IIncrementalGenerator
 
         // Check for method attributes.
         IncrementalValuesProvider<IMethodSymbol?> methodProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
-            _luaFunctionAttributeFullName,
+            GeneratorConstants.LuaFunctionAttributeFullName,
             static (syntaxNode, _) => syntaxNode is MethodDeclarationSyntax,
             static (syntaxContext, _) => syntaxContext.TargetSymbol as IMethodSymbol);
 
@@ -241,7 +216,7 @@ internal class Generator : IIncrementalGenerator
             SF.Token(SyntaxKind.StaticKeyword));
 
         // Class
-        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(_luaOpenClassName)
+        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(GeneratorConstants.LuaOpenClassName)
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
                 GenerateLuaOpenMethod(assemblyName, methodSymbols, methodAttribute, typeDictionary),
@@ -252,7 +227,7 @@ internal class Generator : IIncrementalGenerator
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(
-            SF.IdentifierName(_generatedCodeNamespace))
+            SF.IdentifierName(GeneratorConstants.GeneratedCodeNamespace))
             .AddMembers(classDeclaration);
 
         return SF.CompilationUnit()
@@ -268,7 +243,7 @@ internal class Generator : IIncrementalGenerator
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
             SF.Parameter(
-                SF.Identifier(_luaStateVariableName))
+                SF.Identifier(GeneratorConstants.LuaStateVariableName))
             .WithType(
                 SF.IdentifierName(typeDictionary.GetNameOrThrow(TypeDictionaryId.IntPtr)))]);
 
@@ -277,10 +252,10 @@ internal class Generator : IIncrementalGenerator
             SF.InvocationExpression(
                 SF.MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    SF.IdentifierName(_luaInteropHelperTypeFullName),
-                    SF.IdentifierName(_luaInteropHelperCreateTableMethodName)),
+                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeFullName),
+                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperCreateTableMethodName)),
                 SF.ArgumentList([
-                    SF.Argument(SF.IdentifierName(_luaStateVariableName)),
+                    SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
                     SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(methodSymbols.Length)))])));
 
         // Return statement
@@ -296,7 +271,7 @@ internal class Generator : IIncrementalGenerator
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(
-            SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName),
+            SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName),
             SF.AttributeArgumentList([
                 SF.AttributeArgument(
                     SF.LiteralExpression(
@@ -304,12 +279,12 @@ internal class Generator : IIncrementalGenerator
                         SF.Literal($"luaopen_{assemblyName}")))
                 .WithNameEquals(
                     SF.NameEquals(
-                        SF.IdentifierName(_unmanagedCallersOnlyAttributeEntryPointArgument)))]));
+                        SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeEntryPointArgument)))]));
 
         // Method
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
-            SF.Identifier(_luaOpenMethodName))
+            SF.Identifier(GeneratorConstants.LuaOpenMethodName))
                 .WithModifiers(SF.TokenList(
                     SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the luaopen method be private? Check if Lua can call it if private.
                     SF.Token(SyntaxKind.StaticKeyword),
@@ -326,7 +301,7 @@ internal class Generator : IIncrementalGenerator
     private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, INamedTypeSymbol methodAttribute)
     {
         // Determine function name
-        string functionName = TryGetAttributeValue(_luaFunctionAttributeNameArgumentName, methodSymbol, methodAttribute, out string? customFunctionName)
+        string functionName = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeNameArgumentName, methodSymbol, methodAttribute, out string? customFunctionName)
             ? customFunctionName
             : methodSymbol.Name;
 
@@ -334,10 +309,10 @@ internal class Generator : IIncrementalGenerator
         return SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(_luaInteropHelperTypeFullName),
-                SF.IdentifierName(_luaInteropHelperRegisterFunctionMethodName)),
+                SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeFullName),
+                SF.IdentifierName(GeneratorConstants.LuaInteropHelperRegisterFunctionMethodName)),
             SF.ArgumentList([
-                SF.Argument(SF.IdentifierName(_luaStateVariableName)),
+                SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
                 SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodSymbol.Name)))])));
     }
@@ -350,12 +325,12 @@ internal class Generator : IIncrementalGenerator
         // Parameters
         SeparatedSyntaxList<ParameterSyntax> parameterSyntaxList = SF.SeparatedList([
             SF.Parameter(
-                SF.Identifier(_luaStateVariableName))
+                SF.Identifier(GeneratorConstants.LuaStateVariableName))
             .WithType(
                 SF.IdentifierName(typeDictionary.GetNameOrThrow(TypeDictionaryId.IntPtr)))]);
 
         // Attribute, UnmanagedCallersOnly
-        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(_unmanagedCallersOnlyAttributeFullName));
+        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName));
 
         // Method invocation
         InvocationExpressionSyntax wrappedMethodInvocation = SF.InvocationExpression(
@@ -381,7 +356,7 @@ internal class Generator : IIncrementalGenerator
                 .WithVariables(
                     SF.SingletonSeparatedList(
                     SF.VariableDeclarator(
-                        SF.Identifier(_returnVariableName))
+                        SF.Identifier(GeneratorConstants.ReturnVariableName))
                 .WithInitializer(
                     SF.EqualsValueClause(wrappedMethodInvocation)))));
         }
@@ -424,7 +399,7 @@ internal class Generator : IIncrementalGenerator
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
-            SF.Argument(SF.IdentifierName(_luaStateVariableName)),
+            SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
             SF.Argument(
                 SF.LiteralExpression(
                     SyntaxKind.NumericLiteralExpression,
@@ -447,7 +422,7 @@ internal class Generator : IIncrementalGenerator
                     SF.InvocationExpression(
                         SF.MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
-                            SF.IdentifierName(_luaReadHelperTypeFullName),
+                            SF.IdentifierName(GeneratorConstants.LuaReadHelperTypeFullName),
                             SF.IdentifierName(readMethodName)))
                     .WithArgumentList(parameterReadArguments))))))
             .WithTrailingTrivia(SF.Comment($"// Parameter \"{parameter.Name}\""));
@@ -472,45 +447,11 @@ internal class Generator : IIncrementalGenerator
         return SF.InvocationExpression(
                     SF.MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
-                        SF.IdentifierName(_luaPushHelperTypeFullName),
+                        SF.IdentifierName(GeneratorConstants.LuaPushHelperTypeFullName),
                         SF.IdentifierName(pushMethodName)),
                     SF.ArgumentList([
-                        SF.Argument(SF.IdentifierName(_luaStateVariableName)),
-                        SF.Argument(SF.IdentifierName(_returnVariableName))]));
-    }
-
-    private static AttributeSyntax GenerateGeneratedCodeAttributeAttribute()
-    {
-        string? name = typeof(Generator).Assembly.GetName().Name;
-        string version = typeof(Generator).Assembly.GetName().Version.ToString();
-
-        // Attribute, GeneratedCodeAttribute
-        return SF.Attribute(
-            SF.IdentifierName(_generatedCodeAttributeAttributeFullName),
-            SF.AttributeArgumentList([
-                SF.AttributeArgument(
-                    SF.LiteralExpression(
-                        SyntaxKind.StringLiteralExpression,
-                        SF.Literal(name))),
-                SF.AttributeArgument(
-                    SF.LiteralExpression(
-                        SyntaxKind.StringLiteralExpression,
-                        SF.Literal(version)))]));
-    }
-
-    private static SyntaxTriviaList GenerateXmlSummary(string summary)
-    {
-        string[] lines = summary
-            .Split(["\r\n", "\n"], StringSplitOptions.None)
-            .Select(line => "/// " + line)
-            .ToArray();
-
-        return SF.ParseLeadingTrivia($"""
-            /// <summary>
-            {string.Join("\r\n", lines)}
-            /// </summary>
-
-            """);
+                        SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
+                        SF.Argument(SF.IdentifierName(GeneratorConstants.ReturnVariableName))]));
     }
 
     private static string? GetReadMethodName(ITypeSymbol typeSymbol)
@@ -580,49 +521,6 @@ internal class Generator : IIncrementalGenerator
     private static bool IsParameterUnsupported(IParameterSymbol parameterSymbol)
     {
         return GetReadMethodName(parameterSymbol.Type) == null;
-    }
-
-    private static bool AreContainingTypesInaccessible(ITypeSymbol? typeSymbol, [NotNullWhen(true)] out ITypeSymbol? problematicTypeSymbol)
-    {
-        // Check if containing type is null (no problem).
-        if (typeSymbol == null)
-        {
-            problematicTypeSymbol = null;
-            return false;
-        }
-
-        // Check if containing type has unsupported accessibility (problem).
-        if (typeSymbol is { DeclaredAccessibility: not (Accessibility.Public or Accessibility.Internal) })
-        {
-            problematicTypeSymbol = typeSymbol;
-            return true;
-        }
-
-        // Check if containing type is itself contained within a type (potential problem).
-        if (typeSymbol?.ContainingType != null)
-        {
-            return AreContainingTypesInaccessible(typeSymbol.ContainingType, out problematicTypeSymbol);
-        }
-
-        // Type has supported accessibility and is not contained within another type (no problem).
-        problematicTypeSymbol = null;
-        return false;
-    }
-
-    /// <summary>
-    /// Provides null-or-whitespace check with <see cref="NotNullWhenAttribute"/> for .NET Standard 2.0.
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    private static bool IsNullOrWhiteSpace([NotNullWhen(false)] string? value)
-    {
-        return string.IsNullOrWhiteSpace(value);
-    }
-
-    private static INamedTypeSymbol GetTypeByMetadataName(Compilation compilation, string typeMetadataName)
-    {
-        return compilation.GetTypeByMetadataName(typeMetadataName)
-            ?? throw new Exception(string.Format(_typeNotFoundFromMetadataNameExceptionMessageTemplate, typeMetadataName));
     }
 
     private record struct CompilationData(
