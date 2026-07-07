@@ -18,11 +18,6 @@ public static class EntryPoint
     }
 
     [LuaFunction(ManualFunction = true)]
-    public static void ManualTest()
-    {
-
-    }
-
     [System.Runtime.InteropServices.UnmanagedCallersOnly] // Todo: Allow registering non-generated methods.
     public static int CallbackTest(nint luaState)
     {

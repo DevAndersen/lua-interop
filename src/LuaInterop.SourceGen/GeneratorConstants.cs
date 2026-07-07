@@ -16,6 +16,7 @@ internal static class GeneratorConstants
     public const string LuaInteropHelperTypeFullName = "global::LuaInterop.LuaInteropHelper";
     public const string LuaInteropHelperRegisterFunctionMethodName = "RegisterFunction";
     public const string LuaFunctionAttributeNameArgumentName = "FunctionName";
+    public const string LuaFunctionAttributeManualArgumentName = "ManualFunction";
 
     // Generator
     public const string GeneratedCodeNamespace = "LuaInterop.Generated";

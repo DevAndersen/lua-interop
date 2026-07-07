@@ -90,7 +90,6 @@ internal class Generator : IIncrementalGenerator
         CompilationUnitSyntax compilationUnit = CreateCompilationUnit(
             assemblyName,
             methodSymbolArray,
-            typeDictionary[TypeDictionaryId.LuaFunctionAttribute],
             typeDictionary,
             context);
 
@@ -132,7 +131,6 @@ internal class Generator : IIncrementalGenerator
     private static CompilationUnitSyntax CreateCompilationUnit(
         string assemblyName,
         IMethodSymbol[] methodSymbols,
-        INamedTypeSymbol methodAttribute,
         TypeDictionary typeDictionary,
         SourceProductionContext context)
     {
@@ -145,7 +143,7 @@ internal class Generator : IIncrementalGenerator
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(GeneratorConstants.LuaOpenClassName)
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers(SF.List<MemberDeclarationSyntax>([
-                GenerateLuaOpenMethod(assemblyName, methodSymbols, methodAttribute, typeDictionary),
+                GenerateLuaOpenMethod(assemblyName, methodSymbols, typeDictionary),
                 .. LuaFunctionGenerator.GenerateFunctionMethods(methodSymbols, typeDictionary, context)]))
                 .WithAttributeLists([
                     SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
@@ -163,7 +161,6 @@ internal class Generator : IIncrementalGenerator
     private static MethodDeclarationSyntax GenerateLuaOpenMethod(
         string assemblyName,
         IMethodSymbol[] methodSymbols,
-        INamedTypeSymbol methodAttribute,
         TypeDictionary typeDictionary)
     {
         // Parameters
@@ -192,7 +189,7 @@ internal class Generator : IIncrementalGenerator
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
             createTableMethodInvocation,
-            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x, methodAttribute)),
+            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x, typeDictionary[TypeDictionaryId.LuaFunctionAttribute])),
             returnStatement]);
 
         // Attribute, UnmanagedCallersOnly
