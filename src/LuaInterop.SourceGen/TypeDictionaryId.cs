@@ -18,5 +18,15 @@ internal enum TypeDictionaryId
     /// <summary>
     /// <see cref="Dictionary{TKey, TValue}"/>.
     /// </summary>
-    Dictionary2
+    Dictionary2,
+
+    /// <summary>
+    /// <c>LuaLibraryAttribute</c>.
+    /// </summary>
+    LuaLibraryAttribute,
+
+    /// <summary>
+    /// <c>LuaFunctionAttribute</c>.
+    /// </summary>
+    LuaFunctionAttribute
 }

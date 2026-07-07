@@ -45,13 +45,13 @@ internal class Generator : IIncrementalGenerator
             [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
             [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
             [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
+            [TypeDictionaryId.LuaLibraryAttribute] = assemblyAttributeTypeSymbol,
+            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol,
         };
 
         return new CompilationData(
             compilation.AssemblyName,
             compilation.Assembly,
-            assemblyAttributeTypeSymbol,
-            methodAttributeTypeSymbol,
             typeDictionary);
     }
 
@@ -59,20 +59,14 @@ internal class Generator : IIncrementalGenerator
     {
         // Deconstruct.
         (ImmutableArray<IMethodSymbol?> nullableMethodSymbols, CompilationData compilationData) = data;
-        (
-            string? assemblyName,
-            IAssemblySymbol assembly,
-            INamedTypeSymbol assemblyAttribute,
-            INamedTypeSymbol methodAttribute,
-            TypeDictionary typeDictionary
-        ) = compilationData;
+        (string? assemblyName, IAssemblySymbol assembly, TypeDictionary typeDictionary) = compilationData;
 
         if (compilationData == default)
         {
             return;
         }
 
-        AttributeData? matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
+        AttributeData? matchingAttribute = GetAttributeData(assembly, typeDictionary[TypeDictionaryId.LuaLibraryAttribute]);
         if (matchingAttribute == null)
         {
             return;
@@ -89,8 +83,13 @@ internal class Generator : IIncrementalGenerator
         IMethodSymbol[] methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>().ToArray();
         methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, context, typeDictionary)).ToArray();
 
-        CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
-        SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
+        CompilationUnitSyntax compilationUnit = CreateCompilationUnit(
+            assemblyName,
+            methodSymbols,
+            typeDictionary[TypeDictionaryId.LuaFunctionAttribute],
+            typeDictionary);
+
+        SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
         context.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
     }
 
@@ -531,7 +530,5 @@ internal class Generator : IIncrementalGenerator
     private record struct CompilationData(
         string? AssemblyName,
         IAssemblySymbol Assembly,
-        INamedTypeSymbol AssemblyAttribute,
-        INamedTypeSymbol MethodAttribute,
         TypeDictionary TypeDictionary);
 }
