@@ -44,4 +44,39 @@ internal static class Extensions
             return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
     }
+
+    extension<TSyntax>(TSyntax node) where TSyntax : SyntaxNode
+    {
+        /// <summary>
+        /// Appends <paramref name="node"/> with a comment.
+        /// </summary>
+        /// <param name="comment"></param>
+        /// <returns></returns>
+        public TSyntax AddComment(string comment)
+        {
+            return node.WithTrailingTrivia(SF.Comment("// " + comment));
+        }
+
+        /// <summary>
+        /// Prepends <paramref name="node"/> with an XML documentation summary.
+        /// </summary>
+        /// <param name="summary"></param>
+        /// <returns></returns>
+        public TSyntax AddXmlDocumentation(string summary)
+        {
+            string[] lines = summary
+                .Split(["\r\n", "\n"], StringSplitOptions.None)
+                .Select(line => "/// " + line)
+                .ToArray();
+
+            SyntaxTriviaList triviaList = SF.ParseLeadingTrivia($"""
+                /// <summary>
+                {string.Join("\r\n", lines)}
+                /// </summary>
+
+                """);
+
+            return node.WithLeadingTrivia(triviaList);
+        }
+    }
 }

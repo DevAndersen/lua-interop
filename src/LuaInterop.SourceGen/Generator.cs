@@ -227,7 +227,7 @@ internal class Generator : IIncrementalGenerator
                 .. methodSymbols.Select(x => GenerateFunctionMethod(x, typeDictionary))]))
                 .WithAttributeLists([
                     SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
-                .WithLeadingTrivia(GenerateXmlSummary("Contains Lua interoperability logic."));
+                .AddXmlDocumentation("Contains Lua interoperability logic.");
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(
@@ -265,7 +265,7 @@ internal class Generator : IIncrementalGenerator
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(
             SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(1)))
-            .WithTrailingTrivia(SF.Comment("// Stack index of table"));
+            .AddComment("Stack index of table");
 
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
@@ -297,7 +297,7 @@ internal class Generator : IIncrementalGenerator
                 .WithBody(SF.Block(statementList))
                 .WithAttributeLists([
                     SF.AttributeList([unmanagedCallersOnlyAttribute])])
-                .WithLeadingTrivia(GenerateXmlSummary("Entry point for Lua, exposes available functions."));
+                .AddXmlDocumentation("Entry point for Lua, exposes available functions.");
 
         return methodDeclaration;
     }
@@ -368,7 +368,7 @@ internal class Generator : IIncrementalGenerator
         // Return statement
         ReturnStatementSyntax returnStatement = SF.ReturnStatement(
             GenerateValuePushInvocation(methodSymbol, typeDictionary))
-            .WithTrailingTrivia(SF.Comment(methodSymbol.ReturnsVoid ? "// Void method, no values to be pushed" : "// Push number of values"));
+            .AddComment(methodSymbol.ReturnsVoid ? "Void method, no values to be pushed" : "Push number of values");
 
         // Method statements
         StatementSyntax?[] statements = [
@@ -429,7 +429,7 @@ internal class Generator : IIncrementalGenerator
                             SF.IdentifierName(GeneratorConstants.LuaReadHelperTypeFullName),
                             SF.IdentifierName(readMethodName)))
                     .WithArgumentList(parameterReadArguments))))))
-            .WithTrailingTrivia(SF.Comment($"// Parameter \"{parameter.Name}\""));
+            .AddComment($"Parameter \"{parameter.Name}\"");
 
         return (parameterReadStatement, argumentName);
     }

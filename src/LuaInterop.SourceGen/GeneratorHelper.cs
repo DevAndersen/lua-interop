@@ -77,24 +77,4 @@ internal static class GeneratorHelper
                         SyntaxKind.StringLiteralExpression,
                         SF.Literal(version)))]));
     }
-
-    /// <summary>
-    /// Generate XML summary syntax.
-    /// </summary>
-    /// <param name="summary"></param>
-    /// <returns></returns>
-    public static SyntaxTriviaList GenerateXmlSummary(string summary)
-    {
-        string[] lines = summary
-            .Split(["\r\n", "\n"], StringSplitOptions.None)
-            .Select(line => "/// " + line)
-            .ToArray();
-
-        return SF.ParseLeadingTrivia($"""
-            /// <summary>
-            {string.Join("\r\n", lines)}
-            /// </summary>
-
-            """);
-    }
 }
