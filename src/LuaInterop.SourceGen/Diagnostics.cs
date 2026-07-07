@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace LuaInterop.SourceGen;
+﻿namespace LuaInterop.SourceGen;
 
 internal static class Diagnostics
 {

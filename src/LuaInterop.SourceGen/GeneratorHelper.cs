@@ -1,9 +1,17 @@
-﻿namespace LuaInterop.SourceGen;
+﻿using System.CodeDom.Compiler;
+
+namespace LuaInterop.SourceGen;
 
 internal static class GeneratorHelper
 {
     private const string _typeNotFoundFromMetadataNameExceptionMessageTemplate = "Unable to find type from metadata name '{0}'";
 
+    /// <summary>
+    /// Determines if <paramref name="typeSymbol"/>, and all containing types, are either <c>public</c> or <c>internal</c>.
+    /// </summary>
+    /// <param name="typeSymbol"></param>
+    /// <param name="problematicTypeSymbol"></param>
+    /// <returns></returns>
     public static bool AreContainingTypesInaccessible(ITypeSymbol? typeSymbol, [NotNullWhen(true)] out ITypeSymbol? problematicTypeSymbol)
     {
         // Check if containing type is null (no problem).
@@ -47,12 +55,16 @@ internal static class GeneratorHelper
             ?? throw new Exception(string.Format(_typeNotFoundFromMetadataNameExceptionMessageTemplate, typeMetadataName)); // Todo: Emit diagnostics instead of throwing exception.
     }
 
+    /// <summary>
+    /// Generate <see cref="GeneratedCodeAttribute"/> attribute syntax.
+    /// </summary>
+    /// <returns></returns>
     public static AttributeSyntax GenerateGeneratedCodeAttributeAttribute()
     {
         string? name = typeof(Generator).Assembly.GetName().Name;
         string version = typeof(Generator).Assembly.GetName().Version.ToString();
 
-        // Attribute, GeneratedCodeAttribute
+        // Attribute, GeneratedCodeAttribute.
         return SF.Attribute(
             SF.IdentifierName(GeneratorConstants.GeneratedCodeAttributeAttributeFullName),
             SF.AttributeArgumentList([
@@ -66,6 +78,11 @@ internal static class GeneratorHelper
                         SF.Literal(version)))]));
     }
 
+    /// <summary>
+    /// Generate XML summary syntax.
+    /// </summary>
+    /// <param name="summary"></param>
+    /// <returns></returns>
     public static SyntaxTriviaList GenerateXmlSummary(string summary)
     {
         string[] lines = summary

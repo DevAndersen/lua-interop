@@ -8,36 +8,7 @@ internal class Generator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
-        IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select((compilation, _) =>
-        {
-            INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaLibraryAttributeFullName);
-            if (assemblyAttributeTypeSymbol == null)
-            {
-                return default;
-            }
-
-            INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaFunctionAttributeFullName);
-            if (methodAttributeTypeSymbol == null)
-            {
-                return default;
-            }
-
-            INamedTypeSymbol intType = compilation.GetSpecialType(SpecialType.System_Int32);
-
-            TypeDictionary typeDictionary = new TypeDictionary
-            {
-                [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
-                [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
-                [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
-            };
-
-            return new CompilationData(
-                compilation.AssemblyName,
-                compilation.Assembly,
-                assemblyAttributeTypeSymbol,
-                methodAttributeTypeSymbol,
-                typeDictionary);
-        });
+        IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select(BuildCompilationData);
 
         // Check for method attributes.
         IncrementalValuesProvider<IMethodSymbol?> methodProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
@@ -48,45 +19,79 @@ internal class Generator : IIncrementalGenerator
         // Group methods and pair them with the assembly.
         IncrementalValueProvider<(ImmutableArray<IMethodSymbol?>, CompilationData)> provider = methodProvider.Collect().Combine(compilationDataProvider);
 
-        context.RegisterSourceOutput(provider, (ctx, data) =>
+        // Generate output.
+        context.RegisterSourceOutput(provider, BuildSource);
+    }
+
+    private static CompilationData BuildCompilationData(Compilation compilation, CancellationToken cancellationToken)
+    {
+        // Attempt to resolve the type symbol for LuaLibraryAttribute.
+        INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaLibraryAttributeFullName);
+        if (assemblyAttributeTypeSymbol == null)
         {
-            // Deconstruct.
-            (ImmutableArray<IMethodSymbol?> nullableMethodSymbols, CompilationData compilationData) = data;
-            (
-                string? assemblyName,
-                IAssemblySymbol assembly,
-                INamedTypeSymbol assemblyAttribute,
-                INamedTypeSymbol methodAttribute,
-                TypeDictionary typeDictionary
-            ) = compilationData;
+            return default;
+        }
 
-            IMethodSymbol[] methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>().ToArray();
+        // Attempt to resolve the type symbol for LuaFunctionAttribute.
+        INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaFunctionAttributeFullName);
+        if (methodAttributeTypeSymbol == null)
+        {
+            return default;
+        }
 
-            if (compilationData == default)
-            {
-                return;
-            }
+        // Create a dictionary containing INamedTypeSymbols for commonly used types.
+        TypeDictionary typeDictionary = new TypeDictionary
+        {
+            [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
+            [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
+            [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
+        };
 
-            AttributeData? matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
-            if (matchingAttribute == null)
-            {
-                return;
-            }
+        return new CompilationData(
+            compilation.AssemblyName,
+            compilation.Assembly,
+            assemblyAttributeTypeSymbol,
+            methodAttributeTypeSymbol,
+            typeDictionary);
+    }
 
-            if (IsNullOrWhiteSpace(assemblyName))
-            {
-                return;
-            }
+    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?>, CompilationData) data)
+    {
+        // Deconstruct.
+        (ImmutableArray<IMethodSymbol?> nullableMethodSymbols, CompilationData compilationData) = data;
+        (
+            string? assemblyName,
+            IAssemblySymbol assembly,
+            INamedTypeSymbol assemblyAttribute,
+            INamedTypeSymbol methodAttribute,
+            TypeDictionary typeDictionary
+        ) = compilationData;
 
-            // Todo: Validate assembly name (Lua appears to require all lower-case?)
+        if (compilationData == default)
+        {
+            return;
+        }
 
-            // Validate methods.
-            methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, ctx, typeDictionary)).ToArray();
+        AttributeData? matchingAttribute = GetAttributeData(assembly, assemblyAttribute);
+        if (matchingAttribute == null)
+        {
+            return;
+        }
 
-            CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
-            SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
-            ctx.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
-        });
+        if (IsNullOrWhiteSpace(assemblyName))
+        {
+            return;
+        }
+
+        // Todo: Validate assembly name (Lua appears to require all lower-case?)
+
+        // Validate methods.
+        IMethodSymbol[] methodSymbols = nullableMethodSymbols.OfType<IMethodSymbol>().ToArray();
+        methodSymbols = methodSymbols.Where(x => FilterMethodSymbol(x, context, typeDictionary)).ToArray();
+
+        CompilationUnitSyntax compilationUnit = CreateCompilationUnit(assemblyName, methodSymbols, methodAttribute, typeDictionary).NormalizeWhitespace();
+        SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit, encoding: Encoding.Unicode);
+        context.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
     }
 
     private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
