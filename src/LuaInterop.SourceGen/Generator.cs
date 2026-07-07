@@ -16,13 +16,10 @@ internal class Generator : IIncrementalGenerator
             static (syntaxNode, _) => syntaxNode is MethodDeclarationSyntax,
             static (syntaxContext, _) => syntaxContext.TargetSymbol as IMethodSymbol);
 
-        IncrementalValuesProvider<IMethodSymbol?> manualMethodProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
-            GeneratorConstants.ManualLuaFunctionAttributeFullName,
-            static (syntaxNode, _) => syntaxNode is MethodDeclarationSyntax,
-            static (syntaxContext, _) => syntaxContext.TargetSymbol as IMethodSymbol);
-
-        // Group methods and pair them with the assembly.
-        IncrementalValueProvider<((ImmutableArray<IMethodSymbol?> autoMethods, ImmutableArray<IMethodSymbol?> manualMethods) Left, CompilationData? metadata)> combinedProvider = methodProvider.Collect().Combine(manualMethodProvider.Collect()).Combine(compilationDataProvider);
+        // Group methods and compilation data.
+        IncrementalValueProvider<(ImmutableArray<IMethodSymbol?> methods, CompilationData? metadata)> combinedProvider = methodProvider
+            .Collect()
+            .Combine(compilationDataProvider);
 
         // Generate output.
         context.RegisterSourceOutput(combinedProvider, BuildSource);
@@ -51,7 +48,7 @@ internal class Generator : IIncrementalGenerator
             [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
             [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
             [TypeDictionaryId.LuaLibraryAttribute] = assemblyAttributeTypeSymbol,
-            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol,
+            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol
         };
 
         return new CompilationData(
@@ -60,10 +57,10 @@ internal class Generator : IIncrementalGenerator
             typeDictionary);
     }
 
-    private static void BuildSource(SourceProductionContext context, ((ImmutableArray<IMethodSymbol?> autoMethods, ImmutableArray<IMethodSymbol?> manualMethods) Left, CompilationData? metadata) data)
+    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?> methods, CompilationData? metadata) data)
     {
         // Deconstruct.
-        ((ImmutableArray<IMethodSymbol?> autoMethods, ImmutableArray<IMethodSymbol?> manualMethods), CompilationData? compilationData) = data;
+        (ImmutableArray<IMethodSymbol?> autoMethods, CompilationData? compilationData) = data;
 
         // Validate compilation data.
         if (compilationData == null)
@@ -89,7 +86,6 @@ internal class Generator : IIncrementalGenerator
 
         // Validate methods.
         IMethodSymbol[] methodSymbolArray = autoMethods.OfType<IMethodSymbol>().ToArray();
-        IMethodSymbol[] manualMethodArray = manualMethods.OfType<IMethodSymbol>().ToArray();
 
         CompilationUnitSyntax compilationUnit = CreateCompilationUnit(
             assemblyName,

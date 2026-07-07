@@ -9,7 +9,7 @@ public static class EntryPoint
     // For navigating to source generated code.
     private const string _generatedClassName = nameof(LuaInterop.Generated.LuaEntryPoint);
 
-    [System.Runtime.InteropServices.UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")]
+    //[System.Runtime.InteropServices.UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")]
     public static unsafe int LuaOpen(nint luaState)
     {
         LuaInteropHelper.CreateTable(luaState, 1);
@@ -17,7 +17,12 @@ public static class EntryPoint
         return 1;
     }
 
-    [ManualLuaFunction]
+    [LuaFunction(ManualFunction = true)]
+    public static void ManualTest()
+    {
+
+    }
+
     [System.Runtime.InteropServices.UnmanagedCallersOnly] // Todo: Allow registering non-generated methods.
     public static int CallbackTest(nint luaState)
     {

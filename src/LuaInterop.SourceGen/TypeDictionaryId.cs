@@ -28,5 +28,5 @@ internal enum TypeDictionaryId
     /// <summary>
     /// <c>LuaFunctionAttribute</c>.
     /// </summary>
-    LuaFunctionAttribute
+    LuaFunctionAttribute,
 }

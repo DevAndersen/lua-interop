@@ -11,7 +11,7 @@ internal static class LuaFunctionGenerator
             .Select(y => GenerateFunctionMethod(y, typeDictionary));
     }
 
-    public static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
+    private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
     {
         string containingTypeFullName = methodSymbol.ContainingType.GetFullName();
         (LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)[] argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead).ToArray();
