@@ -104,7 +104,7 @@ internal class Generator : IIncrementalGenerator
             context);
 
         SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
-        context.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
+        context.AddSource($"{assemblyName}.g.cs", syntaxTree.GetText());
     }
 
     private static CompilationUnitSyntax CreateCompilationUnit(
@@ -128,7 +128,7 @@ internal class Generator : IIncrementalGenerator
             SF.Token(SyntaxKind.StaticKeyword));
 
         // Class
-        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(GeneratorConstants.LuaOpenClassName)
+        ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration($"{GeneratorConstants.LuaOpenClassName}_{assemblyName}")
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers([
                 GenerateLuaOpenMethod(assemblyName, validatedMethods, typeDictionary),
