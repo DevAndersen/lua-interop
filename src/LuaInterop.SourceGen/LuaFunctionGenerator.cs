@@ -72,9 +72,9 @@ internal static class LuaFunctionGenerator
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
             SF.Identifier(methodName))
-                .WithModifiers(SF.TokenList(
+                .WithModifiers([
                     SF.Token(SyntaxKind.PrivateKeyword),
-                    SF.Token(SyntaxKind.StaticKeyword)))
+                    SF.Token(SyntaxKind.StaticKeyword)])
                 .WithParameterList(SF.ParameterList(parameterSyntaxList))
                 .WithBody(SF.Block(SF.List(statements.OfType<StatementSyntax>())))
                 .WithAttributeLists([

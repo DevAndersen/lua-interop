@@ -144,12 +144,12 @@ internal class Generator : IIncrementalGenerator
         // Class
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(GeneratorConstants.LuaOpenClassName)
             .WithModifiers(classAccessModifierSyntax)
-            .WithMembers(SF.List<MemberDeclarationSyntax>([
+            .WithMembers([
                 GenerateLuaOpenMethod(assemblyName, methodSymbols, typeDictionary),
-                .. LuaFunctionGenerator.GenerateFunctionMethods(methodSymbols, typeDictionary, context)]))
-                .WithAttributeLists([
-                    SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
-                .AddXmlDocumentation("Contains Lua interoperability logic.");
+                .. LuaFunctionGenerator.GenerateFunctionMethods(methodSymbols, typeDictionary, context)])
+            .WithAttributeLists([
+                SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
+            .AddXmlDocumentation("Contains Lua interoperability logic.");
 
         // Namespace
         NamespaceDeclarationSyntax namespaceDeclaration = SF.NamespaceDeclaration(
@@ -157,7 +157,7 @@ internal class Generator : IIncrementalGenerator
             .AddMembers(classDeclaration);
 
         return SF.CompilationUnit()
-            .WithMembers(SF.SingletonList<MemberDeclarationSyntax>(namespaceDeclaration));
+            .WithMembers([namespaceDeclaration]);
     }
 
     private static MethodDeclarationSyntax GenerateLuaOpenMethod(
@@ -210,15 +210,15 @@ internal class Generator : IIncrementalGenerator
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
             SF.Identifier(GeneratorConstants.LuaOpenMethodName))
-                .WithModifiers(SF.TokenList(
-                    SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the luaopen method be private? Check if Lua can call it if private.
-                    SF.Token(SyntaxKind.StaticKeyword),
-                    SF.Token(SyntaxKind.UnsafeKeyword)))
-                .WithParameterList(SF.ParameterList(parameterSyntaxList))
-                .WithBody(SF.Block(statementList))
-                .WithAttributeLists([
-                    SF.AttributeList([unmanagedCallersOnlyAttribute])])
-                .AddXmlDocumentation("Entry point for Lua, exposes available functions.");
+            .WithModifiers([
+                SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the luaopen method be private? Check if Lua can call it if private.
+                SF.Token(SyntaxKind.StaticKeyword),
+                SF.Token(SyntaxKind.UnsafeKeyword)])
+            .WithParameterList(SF.ParameterList(parameterSyntaxList))
+            .WithBody(SF.Block(statementList))
+            .WithAttributeLists([
+                SF.AttributeList([unmanagedCallersOnlyAttribute])])
+            .AddXmlDocumentation("Entry point for Lua, exposes available functions.");
 
         return methodDeclaration;
     }
