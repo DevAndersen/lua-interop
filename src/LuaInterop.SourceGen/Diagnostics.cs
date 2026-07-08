@@ -51,4 +51,36 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ManualMethodNotReturnInt = new DiagnosticDescriptor(
+        id: "LUA0006",
+        title: "Manual Lua function must return int",
+        messageFormat: "Manual Lua function must return int",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ManualMethodNotAcceptIntPtr = new DiagnosticDescriptor(
+        id: "LUA0007",
+        title: "Manual Lua function parameters must consist of a single IntPtr parameter",
+        messageFormat: "Manual Lua function parameters must consist of a single IntPtr parameter",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ManualMethodMissingUnmanagedCallersOnlyAttribute = new DiagnosticDescriptor(
+        id: "LUA0008",
+        title: "Manual Lua function must be decorated with UnmanagedCallersOnlyAttribute",
+        messageFormat: "Manual Lua function must be decorated with UnmanagedCallersOnlyAttribute",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor EmptyFunctionName = new DiagnosticDescriptor(
+        id: "LUA0009",
+        title: "Custom Lua function name must be a non-empty string",
+        messageFormat: "Custom Lua function name must be a non-empty string",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

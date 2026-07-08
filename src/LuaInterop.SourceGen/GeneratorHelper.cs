@@ -66,7 +66,7 @@ internal static class GeneratorHelper
 
         // Attribute, GeneratedCodeAttribute.
         return SF.Attribute(
-            SF.IdentifierName(GeneratorConstants.GeneratedCodeAttributeAttributeFullName),
+            SF.IdentifierName(GeneratorConstants.GeneratedCodeAttributeAttributeGlobalFullName),
             SF.AttributeArgumentList([
                 SF.AttributeArgument(
                     SF.LiteralExpression(
@@ -76,5 +76,36 @@ internal static class GeneratorHelper
                     SF.LiteralExpression(
                         SyntaxKind.StringLiteralExpression,
                         SF.Literal(version)))]));
+    }
+
+    public static bool TryGetAttributeValue<T>(string argumentName, ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, [NotNullWhen(true)] out T? value)
+    {
+        AttributeData? matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
+        if (matchingAttribute == null)
+        {
+            value = default;
+            return false;
+        }
+
+        return TryGetAttributeNamedArgument(matchingAttribute, argumentName, out value);
+    }
+
+    public static AttributeData? GetAttributeData(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol)
+    {
+        return symbol.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Equals(attributeTypeSymbol, SymbolEqualityComparer.Default) == true);
+    }
+
+    private static bool TryGetAttributeNamedArgument<T>(AttributeData attributeData, string argumentName, out T? value)
+    {
+        KeyValuePair<string, TypedConstant> argument = attributeData.NamedArguments.FirstOrDefault(x => x.Key == argumentName);
+
+        if (!argument.Equals(default) && argument.Value.Value is T typedValue)
+        {
+            value = typedValue;
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 }

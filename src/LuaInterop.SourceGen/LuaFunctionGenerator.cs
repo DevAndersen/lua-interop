@@ -4,11 +4,22 @@ namespace LuaInterop.SourceGen;
 
 internal static class LuaFunctionGenerator
 {
-    public static IEnumerable<MethodDeclarationSyntax> GenerateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary, SourceProductionContext context)
+    public static IEnumerable<MethodDeclarationSyntax> GenerateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary)
     {
-        return methods
-            .Where(x => FilterMethodSymbol(x, context, typeDictionary))
-            .Select(y => GenerateFunctionMethod(y, typeDictionary));
+        return methods.Select(y => GenerateFunctionMethod(y, typeDictionary));
+    }
+
+    public static IEnumerable<(IMethodSymbol MethodSymbol, bool IsManualMethod)> ValidateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary, SourceProductionContext context)
+    {
+        IEnumerable<(IMethodSymbol methodSymbol, bool success, bool isManualMethod)> methodGroupings = methods.Select(x =>
+        {
+            bool isMethodValid = FilterMethodSymbol(x, context, typeDictionary, out bool isManualMethod);
+            return (x, isMethodValid, isManualMethod);
+        });
+
+        return methodGroupings
+            .Where(x => x.success)
+            .Select(y => (y.methodSymbol, y.isManualMethod));
     }
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
@@ -24,7 +35,7 @@ internal static class LuaFunctionGenerator
                 SF.IdentifierName(typeDictionary.GetNameOrThrow(TypeDictionaryId.IntPtr)))]);
 
         // Attribute, UnmanagedCallersOnly
-        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName));
+        AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeGlobalFullName));
 
         // Method invocation
         InvocationExpressionSyntax wrappedMethodInvocation = SF.InvocationExpression(
@@ -72,13 +83,13 @@ internal static class LuaFunctionGenerator
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
             SF.Identifier(methodName))
-                .WithModifiers([
-                    SF.Token(SyntaxKind.PrivateKeyword),
-                    SF.Token(SyntaxKind.StaticKeyword)])
-                .WithParameterList(SF.ParameterList(parameterSyntaxList))
-                .WithBody(SF.Block(SF.List(statements.OfType<StatementSyntax>())))
-                .WithAttributeLists([
-                    SF.AttributeList([unmanagedCallersOnlyAttribute])]);
+            .WithModifiers([
+                SF.Token(SyntaxKind.PrivateKeyword),
+                SF.Token(SyntaxKind.StaticKeyword)])
+            .WithParameterList(SF.ParameterList(parameterSyntaxList))
+            .WithBody(SF.Block(SF.List(statements.OfType<StatementSyntax>())))
+            .WithAttributeLists([
+                SF.AttributeList([unmanagedCallersOnlyAttribute])]);
 
         return methodDeclaration;
     }
@@ -94,7 +105,8 @@ internal static class LuaFunctionGenerator
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
-            SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
+            SF.Argument(
+                SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
             SF.Argument(
                 SF.LiteralExpression(
                     SyntaxKind.NumericLiteralExpression,
@@ -117,7 +129,7 @@ internal static class LuaFunctionGenerator
                     SF.InvocationExpression(
                         SF.MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
-                            SF.IdentifierName(GeneratorConstants.LuaReadHelperTypeFullName),
+                            SF.IdentifierName(GeneratorConstants.LuaReadHelperTypeGlobalFullName),
                             SF.IdentifierName(readMethodName)))
                     .WithArgumentList(parameterReadArguments))))))
             .AddComment($"Parameter \"{parameter.Name}\"");
@@ -140,13 +152,13 @@ internal static class LuaFunctionGenerator
 
         // Invocation expression, push method
         return SF.InvocationExpression(
-                    SF.MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        SF.IdentifierName(GeneratorConstants.LuaPushHelperTypeFullName),
-                        SF.IdentifierName(pushMethodName)),
-                    SF.ArgumentList([
-                        SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
-                        SF.Argument(SF.IdentifierName(GeneratorConstants.ReturnVariableName))]));
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(GeneratorConstants.LuaPushHelperTypeGlobalFullName),
+                SF.IdentifierName(pushMethodName)),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
+                SF.Argument(SF.IdentifierName(GeneratorConstants.ReturnVariableName))]));
     }
 
     private static string? GetReadMethodName(ITypeSymbol typeSymbol)
@@ -207,8 +219,13 @@ internal static class LuaFunctionGenerator
         };
     }
 
-    private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
+    private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary, out bool isManualMethod)
     {
+        // Determine function name.
+        isManualMethod = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeManualArgumentName, methodSymbol, typeDictionary[TypeDictionaryId.LuaFunctionAttribute], out bool manualAttribute)
+            ? manualAttribute
+            : false;
+
         // Disallow instanced methods.
         if (!methodSymbol.IsStatic)
         {
@@ -231,6 +248,62 @@ internal static class LuaFunctionGenerator
             return false;
         }
 
+        // Validate function name.
+        if (TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeNameArgumentName, methodSymbol, typeDictionary[TypeDictionaryId.LuaFunctionAttribute], out string? customFunctionName))
+        {
+            if (customFunctionName.Length == 0)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.EmptyFunctionName,
+                    methodSymbol.Locations.FirstOrDefault(),
+                    methodSymbol.Locations));
+
+                return false;
+            }
+        }
+
+        return isManualMethod
+            ? FilterManualMethodSymbol(methodSymbol, context, typeDictionary)
+            : FilterAutomaticMethodSymbol(methodSymbol, context, typeDictionary);
+    }
+
+    private static bool FilterManualMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
+    {
+        if (!methodSymbol.ReturnType.Equals(typeDictionary[TypeDictionaryId.Int], SymbolEqualityComparer.Default))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ManualMethodNotReturnInt,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
+
+            return false;
+        }
+
+        if (methodSymbol.Parameters is not [IParameterSymbol parameter] || !parameter.Type.Equals(typeDictionary[TypeDictionaryId.IntPtr], SymbolEqualityComparer.Default))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ManualMethodNotAcceptIntPtr,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
+
+            return false;
+        }
+
+        if (GetAttributeData(methodSymbol, typeDictionary[TypeDictionaryId.UnmanagedCallersOnlyAttribute]) == null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ManualMethodMissingUnmanagedCallersOnlyAttribute,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool FilterAutomaticMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
+    {
         // Disallow unsupported return types.
         if (IsReturnTypeUnsupported(methodSymbol, typeDictionary))
         {

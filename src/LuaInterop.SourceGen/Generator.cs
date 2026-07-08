@@ -31,14 +31,21 @@ internal class Generator : IIncrementalGenerator
         INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaLibraryAttributeFullName);
         if (assemblyAttributeTypeSymbol == null)
         {
-            return null;
+            return null; // Todo: Emit diagnostics.
         }
 
         // Attempt to resolve the type symbol for LuaFunctionAttribute.
         INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaFunctionAttributeFullName);
         if (methodAttributeTypeSymbol == null)
         {
-            return null;
+            return null; // Todo: Emit diagnostics.
+        }
+
+        // Attempt to resolve the type symbol for LuaFunctionAttribute.
+        INamedTypeSymbol? unmanagedCallersOnlyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName);
+        if (unmanagedCallersOnlyAttributeTypeSymbol == null)
+        {
+            return null; // Todo: Emit diagnostics.
         }
 
         // Create a dictionary containing INamedTypeSymbols for commonly used types.
@@ -48,7 +55,8 @@ internal class Generator : IIncrementalGenerator
             [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
             [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
             [TypeDictionaryId.LuaLibraryAttribute] = assemblyAttributeTypeSymbol,
-            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol
+            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol,
+            [TypeDictionaryId.UnmanagedCallersOnlyAttribute] = unmanagedCallersOnlyAttributeTypeSymbol
         };
 
         return new CompilationData(
@@ -71,11 +79,13 @@ internal class Generator : IIncrementalGenerator
         // Deconstruct compilation data.
         (string? assemblyName, IAssemblySymbol assembly, TypeDictionary typeDictionary) = compilationData;
 
+        // Ensure that the assembly name is non-empty.
         if (IsNullOrWhiteSpace(assemblyName))
         {
-            return;
+            return; // Todo: Emit diagnostics.
         }
 
+        // Check if the assembly has been decorated with LuaLibraryAttribute.
         AttributeData? matchingAttribute = GetAttributeData(assembly, typeDictionary[TypeDictionaryId.LuaLibraryAttribute]);
         if (matchingAttribute == null)
         {
@@ -97,44 +107,20 @@ internal class Generator : IIncrementalGenerator
         context.AddSource("SyntaxTreeTest.g.cs", syntaxTree.GetText()); // Todo: Find a better file hint name.
     }
 
-    private static bool TryGetAttributeValue<T>(string argumentName, ISymbol symbol, INamedTypeSymbol attributeTypeSymbol, [NotNullWhen(true)] out T? value)
-    {
-        AttributeData? matchingAttribute = GetAttributeData(symbol, attributeTypeSymbol);
-        if (matchingAttribute == null)
-        {
-            value = default;
-            return false;
-        }
-
-        return TryGetAttributeNamedArgument(matchingAttribute, argumentName, out value);
-    }
-
-    private static AttributeData? GetAttributeData(ISymbol symbol, INamedTypeSymbol attributeTypeSymbol)
-    {
-        return symbol.GetAttributes().FirstOrDefault(x => x.AttributeClass?.Equals(attributeTypeSymbol, SymbolEqualityComparer.Default) == true);
-    }
-
-    private static bool TryGetAttributeNamedArgument<T>(AttributeData attributeData, string argumentName, out T? value)
-    {
-        KeyValuePair<string, TypedConstant> argument = attributeData.NamedArguments.FirstOrDefault(x => x.Key == argumentName);
-
-        if (!argument.Equals(default) && argument.Value.Value is T typedValue)
-        {
-            value = typedValue;
-            return true;
-        }
-
-        value = default;
-        return false;
-    }
-
     private static CompilationUnitSyntax CreateCompilationUnit(
         string assemblyName,
         IMethodSymbol[] methodSymbols,
         TypeDictionary typeDictionary,
         SourceProductionContext context)
     {
-        // Todo: Filter out method symbols that fail validation.
+        // Filter out method symbols that fail validation.
+        IEnumerable<(IMethodSymbol MethodSymbol, bool IsManualMethod)> validateMethods = LuaFunctionGenerator.ValidateFunctionMethods(methodSymbols, typeDictionary, context).ToArray();
+
+        // All validated methods (methods to be registered).
+        IMethodSymbol[] validatedMethods = validateMethods.Select(x => x.MethodSymbol).ToArray();
+
+        // Validated automatic methods (methods to generate function methods for).
+        IMethodSymbol[] validatedAutomaticMethods = validateMethods.Where(x => !x.IsManualMethod).Select(x => x.MethodSymbol).ToArray();
 
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
@@ -145,8 +131,8 @@ internal class Generator : IIncrementalGenerator
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration(GeneratorConstants.LuaOpenClassName)
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers([
-                GenerateLuaOpenMethod(assemblyName, methodSymbols, typeDictionary),
-                .. LuaFunctionGenerator.GenerateFunctionMethods(methodSymbols, typeDictionary, context)])
+                GenerateLuaOpenMethod(assemblyName, validatedMethods, typeDictionary),
+                .. LuaFunctionGenerator.GenerateFunctionMethods(validatedAutomaticMethods, typeDictionary)])
             .WithAttributeLists([
                 SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
             .AddXmlDocumentation("Contains Lua interoperability logic.");
@@ -177,7 +163,7 @@ internal class Generator : IIncrementalGenerator
             SF.InvocationExpression(
                 SF.MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeFullName),
+                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeGlobalFullName),
                     SF.IdentifierName(GeneratorConstants.LuaInteropHelperCreateTableMethodName)),
                 SF.ArgumentList([
                     SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
@@ -196,7 +182,7 @@ internal class Generator : IIncrementalGenerator
 
         // Attribute, UnmanagedCallersOnly
         AttributeSyntax unmanagedCallersOnlyAttribute = SF.Attribute(
-            SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName),
+            SF.IdentifierName(GeneratorConstants.UnmanagedCallersOnlyAttributeGlobalFullName),
             SF.AttributeArgumentList([
                 SF.AttributeArgument(
                     SF.LiteralExpression(
@@ -244,7 +230,7 @@ internal class Generator : IIncrementalGenerator
         return SF.ExpressionStatement(SF.InvocationExpression(
             SF.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeFullName),
+                SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeGlobalFullName),
                 SF.IdentifierName(GeneratorConstants.LuaInteropHelperRegisterFunctionMethodName)),
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),

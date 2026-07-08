@@ -29,4 +29,9 @@ internal enum TypeDictionaryId
     /// <c>LuaFunctionAttribute</c>.
     /// </summary>
     LuaFunctionAttribute,
+
+    /// <summary>
+    /// <c>UnmanagedCallersOnlyAttribute</c>.
+    /// </summary>
+    UnmanagedCallersOnlyAttribute
 }

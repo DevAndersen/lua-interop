@@ -1,4 +1,5 @@
 using LuaInterop.Attributes;
+using System.Runtime.InteropServices;
 
 [assembly: LuaLibrary]
 
@@ -9,16 +10,8 @@ public static class EntryPoint
     // For navigating to source generated code.
     private const string _generatedClassName = nameof(LuaInterop.Generated.LuaEntryPoint);
 
-    //[System.Runtime.InteropServices.UnmanagedCallersOnly(EntryPoint = "luaopen_luainteropdemo")]
-    public static unsafe int LuaOpen(nint luaState)
-    {
-        LuaInteropHelper.CreateTable(luaState, 1);
-        LuaInteropHelper.RegisterFunction(luaState, "CallbackTest", &CallbackTest);
-        return 1;
-    }
-
     [LuaFunction(ManualFunction = true)]
-    //[System.Runtime.InteropServices.UnmanagedCallersOnly] // Todo: Allow registering non-generated methods.
+    [UnmanagedCallersOnly]
     public static int CallbackTest(nint luaState)
     {
         // Read integer input (argument 1).
