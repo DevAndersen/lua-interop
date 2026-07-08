@@ -84,7 +84,7 @@ internal class Generator : IIncrementalGenerator
 
         // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
-        // Validate methods.
+        // Null check to satisfy nullability analyzer.
         IMethodSymbol[] methodSymbolArray = autoMethods.OfType<IMethodSymbol>().ToArray();
 
         CompilationUnitSyntax compilationUnit = CreateCompilationUnit(
@@ -134,9 +134,11 @@ internal class Generator : IIncrementalGenerator
         TypeDictionary typeDictionary,
         SourceProductionContext context)
     {
+        // Todo: Filter out method symbols that fail validation.
+
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
-            SF.Token(SyntaxKind.PublicKeyword),  // Todo: Can the class be private? Check if Lua can call it if private.
+            SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the class be private? Check if Lua can call it if private.
             SF.Token(SyntaxKind.StaticKeyword));
 
         // Class
@@ -223,10 +225,20 @@ internal class Generator : IIncrementalGenerator
 
     private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, INamedTypeSymbol methodAttribute)
     {
-        // Determine function name
+        // Determine function name.
         string functionName = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeNameArgumentName, methodSymbol, methodAttribute, out string? customFunctionName)
             ? customFunctionName
             : methodSymbol.Name;
+
+        // Check if the LuaFunction attribute marks the method as manual.
+        bool isManualMethod = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeManualArgumentName, methodSymbol, methodAttribute, out bool manualAttribute)
+            ? manualAttribute
+            : false;
+
+        // Determine the name of the method to invoke.
+        string methodName = isManualMethod
+            ? methodSymbol.GetFullName()
+            : LuaFunctionGenerator.GetSafeMethodName(methodSymbol);
 
         // Method invocation
         return SF.ExpressionStatement(SF.InvocationExpression(
@@ -237,7 +249,7 @@ internal class Generator : IIncrementalGenerator
             SF.ArgumentList([
                 SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
                 SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
-                SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodSymbol.Name)))])));
+                SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodName)))])));
     }
 
     private record CompilationData(

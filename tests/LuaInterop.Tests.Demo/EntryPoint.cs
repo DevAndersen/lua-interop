@@ -18,7 +18,7 @@ public static class EntryPoint
     }
 
     [LuaFunction(ManualFunction = true)]
-    [System.Runtime.InteropServices.UnmanagedCallersOnly] // Todo: Allow registering non-generated methods.
+    //[System.Runtime.InteropServices.UnmanagedCallersOnly] // Todo: Allow registering non-generated methods.
     public static int CallbackTest(nint luaState)
     {
         // Read integer input (argument 1).

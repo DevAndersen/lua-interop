@@ -29,7 +29,7 @@ internal static class Extensions
         /// <returns></returns>
         public string GetNameOrThrow(TypeDictionaryId typeId)
         {
-            return dictionary.GetOrThrow(typeId).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return dictionary.GetOrThrow(typeId).GetFullName();
         }
     }
 
@@ -41,7 +41,7 @@ internal static class Extensions
         /// <returns></returns>
         public string GetFullName()
         {
-            return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.AddMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType));
         }
     }
 

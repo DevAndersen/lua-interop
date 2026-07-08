@@ -68,9 +68,10 @@ internal static class LuaFunctionGenerator
         ];
 
         // Method
+        string methodName = GetSafeMethodName(methodSymbol);
         MethodDeclarationSyntax methodDeclaration = SF.MethodDeclaration(
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
-            SF.Identifier(methodSymbol.Name))
+            SF.Identifier(methodName))
                 .WithModifiers(SF.TokenList(
                     SF.Token(SyntaxKind.PrivateKeyword),
                     SF.Token(SyntaxKind.StaticKeyword)))
@@ -299,5 +300,36 @@ internal static class LuaFunctionGenerator
     private static bool IsParameterUnsupported(IParameterSymbol parameterSymbol)
     {
         return GetReadMethodName(parameterSymbol.Type) == null;
+    }
+
+    /// <summary>
+    /// Returns a collision-safe name from <paramref name="methodSymbol"/>.
+    /// </summary>
+    /// <param name="methodSymbol"></param>
+    /// <returns></returns>
+    public static string GetSafeMethodName(IMethodSymbol methodSymbol)
+    {
+        return string.Join("_", GetNamedSymbolHierarchy(methodSymbol).Select(x => x.Name));
+    }
+
+    /// <summary>
+    /// Returns a collection of named parent <see cref="ITypeSymbol"/>s or <see cref="INamespaceSymbol"/>s.
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    private static IEnumerable<ISymbol> GetNamedSymbolHierarchy(ISymbol symbol)
+    {
+        if (symbol.ContainingSymbol != null)
+        {
+            foreach (var containingSymbol in GetNamedSymbolHierarchy(symbol.ContainingSymbol))
+            {
+                if (containingSymbol is ITypeSymbol or INamespaceSymbol { Name.Length: > 0 })
+                {
+                    yield return containingSymbol;
+                }
+            }
+        }
+
+        yield return symbol;
     }
 }
