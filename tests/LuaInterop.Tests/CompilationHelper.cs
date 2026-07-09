@@ -35,7 +35,7 @@ internal static class CompilationHelper
         IIncrementalGenerator generator = new LuaGenerator();
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 
-        var ranDriver = driver.RunGeneratorsAndUpdateCompilation(
+        driver.RunGeneratorsAndUpdateCompilation(
             compilationInput,
             out Compilation compilationOutput,
             out diagnostics);
