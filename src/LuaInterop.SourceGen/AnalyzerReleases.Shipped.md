@@ -14,3 +14,5 @@ LUA0006 | LUA | Error | Manual Lua function must return int
 LUA0007 | LUA | Error | Manual Lua function parameters must consist of a single IntPtr parameter
 LUA0008 | LUA | Error | Manual Lua function must be decorated with UnmanagedCallersOnlyAttribute
 LUA0009 | LUA | Error | Custom Lua function name must be a non-empty string
+LUA0010 | LUA | Error | Lua function must not be marked as async
+LUA0011 | LUA | Error | Lua function parameter must not be ref-like

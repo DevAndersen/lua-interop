@@ -83,4 +83,20 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FunctionMarkedAsAsync = new DiagnosticDescriptor(
+        id: "LUA0010",
+        title: "Lua function must not be marked as async",
+        messageFormat: "Lua function must not be marked as async",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FunctionMarkedAsRef = new DiagnosticDescriptor(
+        id: "LUA0011",
+        title: "Lua function parameter must not be ref-like",
+        messageFormat: "Lua function must not be {0}",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

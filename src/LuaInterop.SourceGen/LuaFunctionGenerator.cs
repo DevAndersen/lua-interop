@@ -221,6 +221,8 @@ internal static class LuaFunctionGenerator
 
     private static bool FilterMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary, out bool isManualMethod)
     {
+        bool success = true;
+
         // Determine function name.
         isManualMethod = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeManualArgumentName, methodSymbol, typeDictionary[TypeDictionaryId.LuaFunctionAttribute], out bool manualAttribute)
             ? manualAttribute
@@ -234,7 +236,7 @@ internal static class LuaFunctionGenerator
                 methodSymbol.Locations.FirstOrDefault(),
                 methodSymbol.Locations));
 
-            return false;
+            success = false;
         }
 
         // Disallow unreachable methods.
@@ -245,7 +247,7 @@ internal static class LuaFunctionGenerator
                 methodSymbol.Locations.FirstOrDefault(),
                 methodSymbol.Locations));
 
-            return false;
+            success = false;
         }
 
         // Validate function name.
@@ -258,13 +260,40 @@ internal static class LuaFunctionGenerator
                     methodSymbol.Locations.FirstOrDefault(),
                     methodSymbol.Locations));
 
-                return false;
+                success = false;
             }
         }
 
-        return isManualMethod
+        // Disallow async.
+        if (methodSymbol.IsAsync)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.FunctionMarkedAsAsync,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations));
+
+            success = false;
+        }
+
+        foreach (IParameterSymbol parameter in methodSymbol.Parameters)
+        {
+            if (parameter.RefKind != RefKind.None)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.FunctionMarkedAsRef,
+                    parameter.Locations.FirstOrDefault(),
+                    parameter.Locations,
+                    parameter.RefKind));
+
+                success = false;
+            }
+        }
+
+        var methodKindValidation = isManualMethod
             ? FilterManualMethodSymbol(methodSymbol, context, typeDictionary)
             : FilterAutomaticMethodSymbol(methodSymbol, context, typeDictionary);
+
+        return success && methodKindValidation;
     }
 
     private static bool FilterManualMethodSymbol(IMethodSymbol methodSymbol, SourceProductionContext context, TypeDictionary typeDictionary)
@@ -359,7 +388,8 @@ internal static class LuaFunctionGenerator
             }
         }
 
-        // Todo: Disallow methods with the same names/function names.
+        // Todo: Disallow dynamic as parameter and return type.
+        // Todo: Disallow anonymous types as parameter and return type.
 
         return true;
     }

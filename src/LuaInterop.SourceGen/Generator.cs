@@ -17,7 +17,7 @@ internal class Generator : IIncrementalGenerator
             static (syntaxContext, _) => syntaxContext.TargetSymbol as IMethodSymbol);
 
         // Group methods and compilation data.
-        IncrementalValueProvider<(ImmutableArray<IMethodSymbol?> methods, CompilationData? metadata)> combinedProvider = methodProvider
+        IncrementalValueProvider<(ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? metadata)> combinedProvider = methodProvider
             .Collect()
             .Combine(compilationDataProvider);
 
@@ -65,10 +65,10 @@ internal class Generator : IIncrementalGenerator
             typeDictionary);
     }
 
-    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?> methods, CompilationData? metadata) data)
+    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? metadata) data)
     {
         // Deconstruct.
-        (ImmutableArray<IMethodSymbol?> autoMethods, CompilationData? compilationData) = data;
+        (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? compilationData) = data;
 
         // Validate compilation data.
         if (compilationData == null)
@@ -95,7 +95,7 @@ internal class Generator : IIncrementalGenerator
         // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
         // Null check to satisfy nullability analyzer.
-        IMethodSymbol[] methodSymbolArray = autoMethods.OfType<IMethodSymbol>().ToArray();
+        IMethodSymbol[] methodSymbolArray = methodSymbols.OfType<IMethodSymbol>().ToArray();
 
         CompilationUnitSyntax compilationUnit = CreateCompilationUnit(
             assemblyName,
@@ -116,11 +116,18 @@ internal class Generator : IIncrementalGenerator
         // Filter out method symbols that fail validation.
         IEnumerable<(IMethodSymbol MethodSymbol, bool IsManualMethod)> validateMethods = LuaFunctionGenerator.ValidateFunctionMethods(methodSymbols, typeDictionary, context).ToArray();
 
+        // Todo: Disallow methods with the same names/function names.
+
         // All validated methods (methods to be registered).
-        IMethodSymbol[] validatedMethods = validateMethods.Select(x => x.MethodSymbol).ToArray();
+        IMethodSymbol[] validatedMethods = validateMethods
+            .Select(x => x.MethodSymbol)
+            .ToArray();
 
         // Validated automatic methods (methods to generate function methods for).
-        IMethodSymbol[] validatedAutomaticMethods = validateMethods.Where(x => !x.IsManualMethod).Select(x => x.MethodSymbol).ToArray();
+        IMethodSymbol[] validatedAutomaticMethods = validateMethods
+            .Where(x => !x.IsManualMethod)
+            .Select(x => x.MethodSymbol)
+            .ToArray();
 
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
@@ -227,15 +234,16 @@ internal class Generator : IIncrementalGenerator
             : LuaFunctionGenerator.GetSafeMethodName(methodSymbol);
 
         // Method invocation
-        return SF.ExpressionStatement(SF.InvocationExpression(
-            SF.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeGlobalFullName),
-                SF.IdentifierName(GeneratorConstants.LuaInteropHelperRegisterFunctionMethodName)),
-            SF.ArgumentList([
-                SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
-                SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
-                SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodName)))])));
+        return SF.ExpressionStatement(
+            SF.InvocationExpression(
+                SF.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperTypeGlobalFullName),
+                    SF.IdentifierName(GeneratorConstants.LuaInteropHelperRegisterFunctionMethodName)),
+                SF.ArgumentList([
+                    SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
+                    SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName))),
+                    SF.Argument(SF.PrefixUnaryExpression(SyntaxKind.AddressOfExpression, SF.IdentifierName(methodName)))])));
     }
 
     private record CompilationData(
