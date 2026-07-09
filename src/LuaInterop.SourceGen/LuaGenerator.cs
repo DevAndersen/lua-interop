@@ -3,7 +3,7 @@
 namespace LuaInterop.SourceGen;
 
 [Generator(LanguageNames.CSharp)]
-internal class Generator : IIncrementalGenerator
+internal class LuaGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

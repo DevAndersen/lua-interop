@@ -61,8 +61,8 @@ internal static class GeneratorHelper
     /// <returns></returns>
     public static AttributeSyntax GenerateGeneratedCodeAttributeAttribute()
     {
-        string? name = typeof(Generator).Assembly.GetName().Name;
-        string version = typeof(Generator).Assembly.GetName().Version.ToString();
+        string? name = typeof(LuaGenerator).Assembly.GetName().Name;
+        string version = typeof(LuaGenerator).Assembly.GetName().Version.ToString();
 
         // Attribute, GeneratedCodeAttribute.
         return SF.Attribute(
