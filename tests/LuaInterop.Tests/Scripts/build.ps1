@@ -4,4 +4,4 @@ param (
 )
 
 Write-Host "Building native library to '$OutputPath'"
-dotnet publish ../LuaInterop.Tests.Demo -r win-x64 -c Release -o $OutputPath
+dotnet publish ..\LuaInterop.Tests.Demo -r win-x64 -c Release -o $OutputPath
