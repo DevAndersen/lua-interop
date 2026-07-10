@@ -27,7 +27,7 @@
 	<!-- Project references -->
 	<ItemGroup>
 		<ProjectReference Include="../LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
-		<ProjectReference Include="../../src/LuaInterop.SourceGen/LuaInterop.SourceGen.csproj" />
+		<ProjectReference Include="../../src/LuaInterop.SourceGen/LuaInterop.SourceGen.csproj" Aliases="SourceGen" />
 	</ItemGroup>
 
 	<!-- Pre-test build steps -->

@@ -1,6 +1,4 @@
-﻿using LuaInterop.SourceGen;
-
-namespace LuaInterop.Tests.CompilerTests;
+﻿namespace LuaInterop.Tests.CompilerTests;
 
 public class ManualFunctionTests
 {

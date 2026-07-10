@@ -1,5 +1,4 @@
 ﻿using LuaInterop.Attributes;
-using LuaInterop.SourceGen;
 using System.Reflection;
 
 namespace LuaInterop.Tests;
