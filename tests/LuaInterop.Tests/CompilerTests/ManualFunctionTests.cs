@@ -1,7 +1,4 @@
 ﻿using LuaInterop.SourceGen;
-using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
-using Xunit;
 
 namespace LuaInterop.Tests.CompilerTests;
 
@@ -66,10 +63,7 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        if (!(diagnostics is [Diagnostic diag] && diag.Id == Diagnostics.ManualMethodMissingUnmanagedCallersOnlyAttribute.Id))
-        {
-            Assert.Fail();
-        }
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodMissingUnmanagedCallersOnlyAttribute.Id);
     }
 
     [Fact]
@@ -99,10 +93,7 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        if (!(diagnostics is [Diagnostic diag] && diag.Id == Diagnostics.ManualMethodNotAcceptIntPtr.Id))
-        {
-            Assert.Fail();
-        }
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotAcceptIntPtr.Id);
     }
 
     [Fact]
@@ -132,9 +123,6 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        if (!(diagnostics is [Diagnostic diag] && diag.Id == Diagnostics.ManualMethodNotReturnInt.Id))
-        {
-            Assert.Fail();
-        }
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotReturnInt.Id);
     }
 }

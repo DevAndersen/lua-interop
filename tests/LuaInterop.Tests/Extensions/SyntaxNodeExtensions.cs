@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace LuaInterop.Tests.Extensions;
+﻿namespace LuaInterop.Tests.Extensions;
 
 internal static class SyntaxNodeExtensions
 {

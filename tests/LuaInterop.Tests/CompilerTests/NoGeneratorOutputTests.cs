@@ -1,9 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
-using Xunit;
-
-namespace LuaInterop.Tests.CompilerTests;
+﻿namespace LuaInterop.Tests.CompilerTests;
 
 /// <summary>
 /// Contains baseline tests which indicates that the source generator does not produce output when not expected.

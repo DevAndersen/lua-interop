@@ -1,8 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
-using Xunit;
-
-namespace LuaInterop.Tests.CompilerTests;
+﻿namespace LuaInterop.Tests.CompilerTests;
 
 public class LuaLibraryAttributeTests
 {

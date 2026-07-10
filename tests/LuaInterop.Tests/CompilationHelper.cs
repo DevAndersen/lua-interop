@@ -1,11 +1,6 @@
 ﻿using LuaInterop.Attributes;
 using LuaInterop.SourceGen;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
 using System.Reflection;
-using Xunit;
 
 namespace LuaInterop.Tests;
 
@@ -40,7 +35,7 @@ internal static class CompilationHelper
             out Compilation compilationOutput,
             out diagnostics);
 
-        // Ensure there are no compilation-related diagnostics.
+        // Fail if there are any compilation-related diagnostics.
         ImmutableArray<Diagnostic> compilationDiagnostics = compilationOutput.GetDiagnostics();
         if (compilationDiagnostics.Length != 0)
         {

@@ -1,6 +1,4 @@
-﻿using Xunit;
-
-namespace LuaInterop.Tests;
+﻿namespace LuaInterop.Tests.InteropTests;
 
 // Todo: Test source generator itself. Ensure that diagnostics are reported correctly (e.g. nested types).
 // Todo: Test reading and writing strings that contains null characters.
