@@ -17,6 +17,9 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.0.x
+    - name: Install Lua
+      run: apt-get update
+           apt-get install -y liblua5.5-0
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
