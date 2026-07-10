@@ -5,7 +5,7 @@ namespace LuaInterop.Tests.CompilerTests;
 public class ManualFunctionTests
 {
     [Fact]
-    public async Task ManualLuaFunction_Correct_CompilesWithNoDiagnostics()
+    public void ManualLuaFunction_Correct_CompilesWithNoDiagnostics()
     {
         // Arrange
         string csharp = """
@@ -39,7 +39,7 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_NoUnmanagedCallersOnlyAttribute_Diagnostics()
+    public void ManualLuaFunction_NoUnmanagedCallersOnlyAttribute_Diagnostics()
     {
         // Arrange
         string csharp = """
@@ -67,7 +67,7 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_WrongParameterType_Diagnostics()
+    public void ManualLuaFunction_WrongParameterType_Diagnostics()
     {
         // Arrange
         string csharp = """
@@ -97,7 +97,7 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_WrongReturnType_Diagnostics()
+    public void ManualLuaFunction_WrongReturnType_Diagnostics()
     {
         // Arrange
         string csharp = """

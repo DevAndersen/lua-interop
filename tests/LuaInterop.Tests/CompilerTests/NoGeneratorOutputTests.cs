@@ -6,7 +6,7 @@
 public class NoGeneratorOutputTests
 {
     [Fact]
-    public async Task Compile_EmptySource_EntryPointNotExists()
+    public void Compile_EmptySource_EntryPointNotExists()
     {
         // Arrange
         string csharp = string.Empty;
@@ -21,7 +21,7 @@ public class NoGeneratorOutputTests
     }
 
     [Fact]
-    public async Task Compile_NoLuaLibraryAttribute_EntryPointNotExists()
+    public void Compile_NoLuaLibraryAttribute_EntryPointNotExists()
     {
         // Arrange
         string csharp = """

@@ -3,7 +3,7 @@
 public class LuaLibraryAttributeTests
 {
     [Fact]
-    public async Task Compile_AssemblyWithLuaLibraryAttribute_EntryPointExists()
+    public void Compile_AssemblyWithLuaLibraryAttribute_EntryPointExists()
     {
         // Arrange
         string csharp = """
@@ -19,7 +19,7 @@ public class LuaLibraryAttributeTests
     }
 
     [Fact]
-    public async Task Compile_LuaFunction_GeneratesWrapperMethod()
+    public void Compile_LuaFunction_GeneratesWrapperMethod()
     {
         // Arrange
         string csharp = """
