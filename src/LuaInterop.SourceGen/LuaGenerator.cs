@@ -131,7 +131,7 @@ internal class LuaGenerator : IIncrementalGenerator
 
         // Class access modifiers
         SyntaxTokenList classAccessModifierSyntax = SF.TokenList(
-            SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the class be private? Check if Lua can call it if private.
+            SF.Token(SyntaxKind.InternalKeyword),
             SF.Token(SyntaxKind.StaticKeyword));
 
         // Class
@@ -204,7 +204,7 @@ internal class LuaGenerator : IIncrementalGenerator
             SF.PredefinedType(SF.Token(SyntaxKind.IntKeyword)),
             SF.Identifier(GeneratorConstants.LuaOpenMethodName))
             .WithModifiers([
-                SF.Token(SyntaxKind.PublicKeyword), // Todo: Can the luaopen method be private? Check if Lua can call it if private.
+                SF.Token(SyntaxKind.PrivateKeyword),
                 SF.Token(SyntaxKind.StaticKeyword),
                 SF.Token(SyntaxKind.UnsafeKeyword)])
             .WithParameterList(SF.ParameterList(parameterSyntaxList))

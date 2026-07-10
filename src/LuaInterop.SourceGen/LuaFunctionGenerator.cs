@@ -101,7 +101,7 @@ internal static class LuaFunctionGenerator
         string fullTypeName = parameter.Type.GetFullName();
 
         string readMethodName = GetReadMethodName(parameter.Type)
-            ?? throw new Exception($"LuaInterop failed, {nameof(GetReadMethodName)} returned null for argument '{argumentName}'"); // Should never happen, check performed earlier.;
+            ?? throw new Exception($"LuaInterop failed, {nameof(GetReadMethodName)} returned null for argument '{argumentName}'"); // Should never happen, check performed earlier.
 
         // Method invocation arguments, read argument
         ArgumentListSyntax parameterReadArguments = SF.ArgumentList([
