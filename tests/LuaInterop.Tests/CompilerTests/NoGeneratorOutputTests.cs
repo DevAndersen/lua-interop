@@ -6,7 +6,7 @@
 public class NoGeneratorOutputTests
 {
     [Fact]
-    public async Task Compile_EmptySource_EntryPointNotExists()
+    public void Compile_EmptySource_EntryPointNotExists()
     {
         // Arrange
         string csharp = string.Empty;
@@ -21,18 +21,17 @@ public class NoGeneratorOutputTests
     }
 
     [Fact]
-    public async Task Compile_NoLuaLibraryAttribute_EntryPointNotExists()
+    public void Compile_NoLuaLibraryAttribute_EntryPointNotExists()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             namespace Test
             {
                 public static class Class
                 {
-
                 }
             }
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);

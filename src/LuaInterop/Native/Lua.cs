@@ -9,9 +9,9 @@ namespace LuaInterop.Native;
 internal static partial class Lua
 {
 #if WINDOWS
-    private const string Library = "lua55.dll";
+    internal const string Library = "lua55.dll";
 #else
-    private const string Library = "lua";
+    internal const string Library = "liblua.so";
 #endif
 
     [LibraryImport(Library, EntryPoint = "lua_createtable")]
