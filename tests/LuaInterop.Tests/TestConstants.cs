@@ -1,6 +1,4 @@
-﻿using LuaInterop.SourceGen;
-
-namespace LuaInterop.Tests;
+﻿namespace LuaInterop.Tests;
 
 internal static class TestConstants
 {

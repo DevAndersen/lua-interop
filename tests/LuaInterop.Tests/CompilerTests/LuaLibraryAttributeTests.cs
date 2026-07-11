@@ -3,12 +3,12 @@
 public class LuaLibraryAttributeTests
 {
     [Fact]
-    public async Task Compile_AssemblyWithLuaLibraryAttribute_EntryPointExists()
+    public void Compile_AssemblyWithLuaLibraryAttribute_EntryPointExists()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             [assembly: global::LuaInterop.Attributes.LuaLibrary]
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
@@ -19,10 +19,10 @@ public class LuaLibraryAttributeTests
     }
 
     [Fact]
-    public async Task Compile_LuaFunction_GeneratesWrapperMethod()
+    public void Compile_LuaFunction_GeneratesWrapperMethod()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
 
             [assembly: LuaLibrary]
@@ -36,7 +36,7 @@ public class LuaLibraryAttributeTests
                 {
                 }
             }
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);

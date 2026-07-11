@@ -1,14 +1,12 @@
-﻿using LuaInterop.SourceGen;
-
-namespace LuaInterop.Tests.CompilerTests;
+﻿namespace LuaInterop.Tests.CompilerTests;
 
 public class ManualFunctionTests
 {
     [Fact]
-    public async Task ManualLuaFunction_Correct_CompilesWithNoDiagnostics()
+    public void ManualLuaFunction_Correct_CompilesWithNoDiagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -25,7 +23,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
@@ -39,10 +37,10 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_NoUnmanagedCallersOnlyAttribute_Diagnostics()
+    public void ManualLuaFunction_NoUnmanagedCallersOnlyAttribute_Diagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
 
             [assembly: LuaLibrary]
@@ -57,7 +55,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
@@ -67,10 +65,10 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_WrongParameterType_Diagnostics()
+    public void ManualLuaFunction_WrongParameterType_Diagnostics()
     {
-        // Arrange
-        string csharp = """
+        // Act
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -87,9 +85,8 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
-        // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
@@ -97,10 +94,10 @@ public class ManualFunctionTests
     }
 
     [Fact]
-    public async Task ManualLuaFunction_WrongReturnType_Diagnostics()
+    public void ManualLuaFunction_WrongReturnType_Diagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -117,7 +114,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
