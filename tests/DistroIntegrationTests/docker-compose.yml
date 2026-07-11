@@ -1,0 +1,10 @@
+services:
+
+  ubuntu2604:
+      image: luainterop/distrotesting:ubuntu2604
+      container_name: luainterop-ubuntu2604
+      build:
+          context: ../../
+          dockerfile: tests/DistroIntegrationTests/Dockerfile.ubuntu2604
+      volumes:
+        - ../../:/source:ro
