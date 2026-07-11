@@ -10,6 +10,7 @@ internal static class CompilationHelper
     /// </summary>
     /// <param name="csharp"></param>
     /// <param name="diagnostics"></param>
+    /// <param name="assemblyName"></param>
     /// <returns></returns>
     public static IAssemblySymbol Compile(
         string csharp,

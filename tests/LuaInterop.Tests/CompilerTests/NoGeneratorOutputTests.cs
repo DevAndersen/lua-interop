@@ -24,15 +24,14 @@ public class NoGeneratorOutputTests
     public void Compile_NoLuaLibraryAttribute_EntryPointNotExists()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             namespace Test
             {
                 public static class Class
                 {
-
                 }
             }
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);

@@ -6,7 +6,7 @@ public class ManualFunctionTests
     public void ManualLuaFunction_Correct_CompilesWithNoDiagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -23,7 +23,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         IAssemblySymbol assembly = CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
@@ -40,7 +40,7 @@ public class ManualFunctionTests
     public void ManualLuaFunction_NoUnmanagedCallersOnlyAttribute_Diagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
 
             [assembly: LuaLibrary]
@@ -55,7 +55,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
@@ -67,8 +67,8 @@ public class ManualFunctionTests
     [Fact]
     public void ManualLuaFunction_WrongParameterType_Diagnostics()
     {
-        // Arrange
-        string csharp = """
+        // Act
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -85,9 +85,8 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
-        // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
@@ -98,7 +97,7 @@ public class ManualFunctionTests
     public void ManualLuaFunction_WrongReturnType_Diagnostics()
     {
         // Arrange
-        string csharp = """
+        CSharpString csharp = new CSharpString("""
             using LuaInterop.Attributes;
             using System.Runtime.InteropServices;
 
@@ -115,7 +114,7 @@ public class ManualFunctionTests
                     return 0;
                 }
             }
-            """;
+            """);
 
         // Act
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
