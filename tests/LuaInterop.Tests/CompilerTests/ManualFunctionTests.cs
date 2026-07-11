@@ -61,7 +61,7 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodMissingUnmanagedCallersOnlyAttribute.Id);
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodMissingUnmanagedCallersOnlyAttribute.Id!); // Todo: Null-forgiving operator necessary on .NET SDK 10.0.109
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotAcceptIntPtr.Id);
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotAcceptIntPtr.Id!); // Todo: Null-forgiving operator necessary on .NET SDK 10.0.109
     }
 
     [Fact]
@@ -120,6 +120,6 @@ public class ManualFunctionTests
         CompilationHelper.Compile(csharp, out ImmutableArray<Diagnostic> diagnostics);
 
         // Assert
-        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotReturnInt.Id);
+        Assert.Diagnostics(diagnostics, Diagnostics.ManualMethodNotReturnInt.Id!); // Todo: Null-forgiving operator necessary on .NET SDK 10.0.109
     }
 }
