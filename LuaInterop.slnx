@@ -1,6 +1,5 @@
 <Solution>
   <Folder Name="/Solution Items/">
-    <File Path=".github/dependabot.yml" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
@@ -11,7 +10,7 @@
     <File Path=".github/dependabot.yml" />
     <File Path=".github/workflows/dotnet.yml" />
   </Folder>
-  <Project Path="src/LuaInterop.SourceGen/LuaInterop.SourceGen.csproj" Id="66f620d8-b2b8-49f1-8b8e-72706dd3b756" />
+  <Project Path="src/LuaInterop.SourceGen/LuaInterop.SourceGen.csproj" />
   <Project Path="src/LuaInterop/LuaInterop.csproj" />
   <Project Path="tests/LuaInterop.Tests/LuaInterop.Tests.csproj" />
   <Project Path="tests/LuaInterop.Tests.Demo/LuaInterop.Tests.Demo.csproj" />
