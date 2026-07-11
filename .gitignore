@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 # .so library file
 *.so
 *.so.dbg
+
+# Visual Studio Code files
+.vscode/
