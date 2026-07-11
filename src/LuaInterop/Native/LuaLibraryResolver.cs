@@ -11,22 +11,33 @@ internal static class NativeLibraryResolver
 #pragma warning restore CA2255
     internal static void ModuleInit()
     {
+        // Resolve liblua library file, its name changes between different Linux distros.
         NativeLibrary.SetDllImportResolver(typeof(NativeLibraryResolver).Assembly, (name, assembly, path) =>
         {
-            if (name == Lua.Library)
+            if (name != Lua.Library)
             {
-                if (NativeLibrary.TryLoad(Lua.Library, out nint handle))
-                {
-                    return handle;
-                }
-                else if (NativeLibrary.TryLoad("liblua5.5.so", out handle))
-                {
-                    return handle;
-                }
-                throw new Exception($"Failed to resolve Lua library file");
+                return nint.Zero;
             }
 
-            return nint.Zero;
+            string[] potentialLibraryNames =
+            [
+                "liblua.so", // Arch
+                "liblua.so.0",
+                "liblua5.5.so", // Ubuntu
+                "liblua5.5.so.0",
+                "liblua-5.5.so",
+                "liblua-5.5.so.0", // Alpine
+            ];
+
+            foreach (string str in potentialLibraryNames)
+            {
+                if (NativeLibrary.TryLoad(str, out nint handle))
+                {
+                    return handle;
+                }
+            }
+
+            throw new Exception("Failed to resolve Lua library file");
         });
     }
 }

@@ -33,7 +33,7 @@ public static class LuaHelper
 
         Process? process = Process.Start(new ProcessStartInfo
         {
-            FileName = "lua",
+            FileName = "lua5.5", // Todo: Note this down as needing to be changed if targeting a different version of Lua.
             Arguments = $"-e \"{escapedScript}\"",
             UseShellExecute = false,
             RedirectStandardOutput = true,

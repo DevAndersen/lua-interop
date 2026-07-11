@@ -1,0 +1,5 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0.301-alpine3.24
+RUN apk add build-base lua5.5
+COPY --parents "**.csproj" "**.slnx" "**.props" "/source"
+RUN dotnet restore "/source"
+ENTRYPOINT cp -r "/source" "/work" ; dotnet test --verbosity normal -p:TestingPlatformShowTestsFailure=true "/work"

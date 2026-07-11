@@ -8,3 +8,21 @@ services:
           dockerfile: tests/DistroIntegrationTests/Dockerfile.ubuntu2604
       volumes:
         - ../../:/source:ro
+
+  alpine:
+      image: luainterop/distrotesting:alpine
+      container_name: luainterop-alpine
+      build:
+          context: ../../
+          dockerfile: tests/DistroIntegrationTests/Dockerfile.alpine
+      volumes:
+        - ../../:/source:ro
+
+  archlinux:
+      image: luainterop/distrotesting:archlinux
+      container_name: luainterop-archlinux
+      build:
+          context: ../../
+          dockerfile: tests/DistroIntegrationTests/Dockerfile.archlinux
+      volumes:
+        - ../../:/source:ro

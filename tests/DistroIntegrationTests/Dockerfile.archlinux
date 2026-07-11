@@ -1,0 +1,5 @@
+FROM archlinux
+RUN pacman -Syu --noconfirm gcc dotnet-sdk dotnet-targeting-pack
+COPY --parents "**.csproj" "**.slnx" "**.props" "/source"
+RUN dotnet restore "/source"
+ENTRYPOINT cp -r "/source" "/work" ; dotnet test --verbosity normal -p:TestingPlatformShowTestsFailure=true "/work"
