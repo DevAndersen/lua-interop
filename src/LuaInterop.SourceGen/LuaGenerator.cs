@@ -106,8 +106,16 @@ internal class LuaGenerator : IIncrementalGenerator
         SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
         context.AddSource($"{assemblyName}.g.cs", syntaxTree.GetText());
 
-        SyntaxTree moduleInitializerSyntaxTree = SF.SyntaxTree(ModuleInitializerBuilder.GenerateModuleInitializer().NormalizeWhitespace(), encoding: Encoding.Unicode);
-        context.AddSource($"{GeneratorConstants.ModuleInitializerClassName}.g.cs", moduleInitializerSyntaxTree.GetText());
+        // Determine if the module initializer class should be generated.
+        bool generateModuleInitializerClass = TryGetAttributeValue(GeneratorConstants.LuaLibraryAttributeInitializerArgumentName, assembly, typeDictionary[TypeDictionaryId.LuaLibraryAttribute], out bool attributeValue)
+            ? attributeValue
+            : true;
+
+        if (generateModuleInitializerClass)
+        {
+            SyntaxTree moduleInitializerSyntaxTree = SF.SyntaxTree(ModuleInitializerBuilder.GenerateModuleInitializer().NormalizeWhitespace(), encoding: Encoding.Unicode);
+            context.AddSource($"{GeneratorConstants.ModuleInitializerClassName}.g.cs", moduleInitializerSyntaxTree.GetText());
+        }
     }
 
     private static CompilationUnitSyntax CreateCompilationUnit(

@@ -6,7 +6,7 @@ namespace LuaInterop;
 public static class LuaModuleInitializer
 {
     /// <summary>
-    /// Performs initialization logic.
+    /// Performs initialization logic when the library gets called from unmanaged code.
     /// </summary>
     /// <exception cref="Exception"></exception>
     public static void Initialize()

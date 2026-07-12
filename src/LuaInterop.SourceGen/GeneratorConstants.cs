@@ -12,6 +12,7 @@ internal static class GeneratorConstants
 
     // LuaInterop
     public const string LuaLibraryAttributeFullName = "LuaInterop.Attributes.LuaLibraryAttribute";
+    public const string LuaLibraryAttributeInitializerArgumentName = "GenerateModuleInitializerClass";
     public const string LuaFunctionAttributeFullName = "LuaInterop.Attributes.LuaFunctionAttribute";
     public const string LuaReadHelperTypeGlobalFullName = "global::LuaInterop.LuaReadHelper";
     public const string LuaPushHelperTypeGlobalFullName = "global::LuaInterop.LuaPushHelper";
