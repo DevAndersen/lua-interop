@@ -1,28 +1,22 @@
 services:
 
-  ubuntu2604:
-      image: luainterop/distrotesting:ubuntu2604
-      container_name: luainterop-ubuntu2604
-      build:
-          context: ../../
-          dockerfile: tests/DistroIntegrationTests/Dockerfile.ubuntu2604
-      volumes:
-        - ../../:/source:ro
+    ubuntu2604:
+        image: luainterop/distrotesting:ubuntu2604
+        container_name: luainterop-ubuntu2604
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.ubuntu2604
 
-  alpine:
-      image: luainterop/distrotesting:alpine
-      container_name: luainterop-alpine
-      build:
-          context: ../../
-          dockerfile: tests/DistroIntegrationTests/Dockerfile.alpine
-      volumes:
-        - ../../:/source:ro
+    alpine:
+        image: luainterop/distrotesting:alpine
+        container_name: luainterop-alpine
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.alpine
 
-  archlinux:
-      image: luainterop/distrotesting:archlinux
-      container_name: luainterop-archlinux
-      build:
-          context: ../../
-          dockerfile: tests/DistroIntegrationTests/Dockerfile.archlinux
-      volumes:
-        - ../../:/source:ro
+    archlinux:
+        image: luainterop/distrotesting:archlinux
+        container_name: luainterop-archlinux
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.archlinux
