@@ -6,6 +6,7 @@ internal static class GeneratorConstants
     public const string UnmanagedCallersOnlyAttributeGlobalFullName = "global::System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute";
     public const string UnmanagedCallersOnlyAttributeFullName = "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute";
     public const string GeneratedCodeAttributeAttributeGlobalFullName = "global::System.CodeDom.Compiler.GeneratedCodeAttribute";
+    public const string ModuleInitializerAttributeAttributeGlobalFullName = "global::System.Runtime.CompilerServices.ModuleInitializerAttribute";
     public const string TypeMetadataNameDictionary2 = "System.Collections.Generic.IDictionary`2";
     public const string UnmanagedCallersOnlyAttributeEntryPointArgument = "EntryPoint";
 
@@ -26,4 +27,10 @@ internal static class GeneratorConstants
     public const string LuaOpenMethodName = "LuaOpen";
     public const string LuaStateVariableName = "luaState";
     public const string ReturnVariableName = "returnedValue";
+
+    // Module initializer
+    public const string ModuleInitializerClassName = "LuaInteropModuleInitializer";
+    public const string ModuleInitializer = "InitializeModule";
+    public const string ModuleInitializerHelperTypeGlobalFullName = "global::LuaInterop.LuaModuleInitializer";
+    public const string ModuleInitializerHelperMethodName = "Initialize";
 }

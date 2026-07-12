@@ -1,18 +1,14 @@
-﻿#if !WINDOWS
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using LuaInterop.Native;
 
-namespace LuaInterop.Native;
+namespace LuaInterop;
 
-internal static class NativeLibraryResolver
+public static class LuaModuleInitializer
 {
-#pragma warning disable CA2255
-    [ModuleInitializer]
-#pragma warning restore CA2255
-    internal static void ModuleInit()
+    public static void Initialize()
     {
         // Resolve liblua library file, its name changes between different Linux distros.
-        NativeLibrary.SetDllImportResolver(typeof(NativeLibraryResolver).Assembly, (name, assembly, path) =>
+        NativeLibrary.SetDllImportResolver(typeof(LuaModuleInitializer).Assembly, (name, assembly, path) =>
         {
             if (name != Lua.Library)
             {
@@ -41,7 +37,3 @@ internal static class NativeLibraryResolver
         });
     }
 }
-#endif
-
-// Todo: Call this from source generator, move [ModuleInitializer] declaration over to source generator.
-// Todo: Consolidate the two Unix filename paths in the same file.

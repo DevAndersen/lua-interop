@@ -9,6 +9,7 @@ public static class Debugging
 #pragma warning disable IDE0051 // Remove unused private member
     // For navigating to source generated code.
     private const string _generatedClassName = nameof(Generated.LuaEntryPoint_luainteropdemo);
+    private const string _moduleInitializerClassName = nameof(Generated.LuaInteropModuleInitializer);
 #pragma warning restore IDE0051 // Remove unused private member
 #endif
 
