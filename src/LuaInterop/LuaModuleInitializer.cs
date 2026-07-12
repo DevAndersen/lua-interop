@@ -5,10 +5,24 @@ namespace LuaInterop;
 
 public static class LuaModuleInitializer
 {
+    /// <summary>
+    /// Performs initialization logic.
+    /// </summary>
+    /// <exception cref="Exception"></exception>
     public static void Initialize()
     {
-        // Resolve liblua library file, its name changes between different Linux distros.
-        NativeLibrary.SetDllImportResolver(typeof(LuaModuleInitializer).Assembly, (name, assembly, path) =>
+        #if !WINDOWS
+        ResolveLiblua();
+        #endif
+    }
+
+    /// <summary>
+    /// Attempt to resolve the <c>liblua</c> library file, as the file name varies between Linux distros.
+    /// </summary>
+    /// <exception cref="Exception"></exception>
+    private static void ResolveLiblua()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(LuaModuleInitializer).Assembly, (name, _, _) =>
         {
             if (name != Lua.Library)
             {
@@ -33,7 +47,7 @@ public static class LuaModuleInitializer
                 }
             }
 
-            throw new Exception("Failed to resolve Lua library file");
+            throw new Exception("Failed to resolve Lua library file"); // Todo: Use a more relevant exception type.
         });
     }
 }
