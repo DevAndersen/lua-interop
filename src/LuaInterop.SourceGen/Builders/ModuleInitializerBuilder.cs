@@ -1,6 +1,6 @@
 using static LuaInterop.SourceGen.GeneratorHelper;
 
-namespace LuaInterop.SourceGen;
+namespace LuaInterop.SourceGen.Builders;
 
 internal static class ModuleInitializerBuilder
 {

@@ -1,8 +1,8 @@
 ﻿using static LuaInterop.SourceGen.GeneratorHelper;
 
-namespace LuaInterop.SourceGen;
+namespace LuaInterop.SourceGen.Builders;
 
-internal static class LuaFunctionGenerator
+internal static class LuaFunctionBuilder
 {
     public static IEnumerable<MethodDeclarationSyntax> GenerateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary)
     {
