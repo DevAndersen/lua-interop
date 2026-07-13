@@ -80,10 +80,16 @@ internal class LuaGenerator : IIncrementalGenerator
         // Deconstruct compilation data.
         (string? assemblyName, IAssemblySymbol assembly, TypeDictionary typeDictionary) = compilationData;
 
-        // Ensure that the assembly name is non-empty.
-        if (IsNullOrWhiteSpace(assemblyName))
+        // Validate the assembly.
+        // Todo: Validate assembly name (Lua appears to require all lower-case?)
+        if (IsNullOrWhiteSpace(assemblyName) || !SyntaxFacts.IsValidIdentifier(assemblyName))
         {
-            return; // Todo: Emit diagnostics.
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.InvalidAssemblyName,
+                null,
+                assemblyName));
+
+            return;
         }
 
         // Check if the assembly has been decorated with LuaLibraryAttribute.
@@ -92,8 +98,6 @@ internal class LuaGenerator : IIncrementalGenerator
         {
             return;
         }
-
-        // Todo: Validate assembly name (Lua appears to require all lower-case?)
 
         // Null check to satisfy nullability analyzer.
         IMethodSymbol[] methodSymbolArray = methodSymbols.OfType<IMethodSymbol>().ToArray();
