@@ -110,8 +110,8 @@ internal static class Diagnostics
 
     public static readonly DiagnosticDescriptor InvalidAssemblyName = new DiagnosticDescriptor(
         id: "LUA0013",
-        title: "Assembly name is not a valid identifier",
-        messageFormat: "Assembly name '{0}' is not a valid identifier",
+        title: "Assembly name must be a valid identifier and must not contain any dots",
+        messageFormat: "Assembly name '{0}' must be a valid identifier and must not contain any dots",
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);

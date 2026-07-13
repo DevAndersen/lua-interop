@@ -81,7 +81,6 @@ internal class LuaGenerator : IIncrementalGenerator
         (string? assemblyName, IAssemblySymbol assembly, TypeDictionary typeDictionary) = compilationData;
 
         // Validate the assembly.
-        // Todo: Validate assembly name (Lua appears to require all lower-case?)
         if (IsNullOrWhiteSpace(assemblyName) || !SyntaxFacts.IsValidIdentifier(assemblyName))
         {
             context.ReportDiagnostic(Diagnostic.Create(

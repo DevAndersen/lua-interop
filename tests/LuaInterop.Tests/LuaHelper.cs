@@ -25,7 +25,7 @@ public static class LuaHelper
     {
         // language=Lua
         string fullScript = $"""
-            local interop = require("luainteropdemo")
+            local interop = require("LuaInterop_Tests_Demo")
             {script}
             """;
 

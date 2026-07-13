@@ -8,7 +8,7 @@ public static class Debugging
 #if DEBUG
 #pragma warning disable IDE0051 // Remove unused private member
     // For navigating to source generated code.
-    private const string _generatedClassName = nameof(Generated.LuaEntryPoint_luainteropdemo);
+    private const string _generatedClassName = nameof(Generated.LuaEntryPoint_LuaInterop_Tests_Demo);
     private const string _moduleInitializerClassName = nameof(Generated.LuaInteropModuleInitializer);
 #pragma warning restore IDE0051 // Remove unused private member
 #endif
@@ -32,7 +32,6 @@ public static class Debugging
         // Read function return value.
         int result = LuaReadHelper.ReadInt(luaState, -1, "");
         Console.WriteLine($"Callback returned: {result}");
-
         return 0;
     }
 }

@@ -17,4 +17,4 @@ LUA0009 | LUA | Error | Custom Lua function name must be a non-empty string
 LUA0010 | LUA | Error | Lua function must not be marked as async
 LUA0011 | LUA | Error | Lua function parameter must not be ref-like
 LUA0012 | LUA | Error | Lua function name is not unique
-LUA0013 | LUA | Error | Assembly name is not a valid identifier
+LUA0013 | LUA | Error | Assembly name must be a valid identifier and must not contain any dots

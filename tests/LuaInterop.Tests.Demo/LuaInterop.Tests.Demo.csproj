@@ -3,7 +3,7 @@
 	<!-- General -->
 	<PropertyGroup>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<AssemblyName>luainteropdemo</AssemblyName>
+		<AssemblyName>LuaInterop_Tests_Demo</AssemblyName>
 	</PropertyGroup>
 
 	<!-- Native AOT -->
