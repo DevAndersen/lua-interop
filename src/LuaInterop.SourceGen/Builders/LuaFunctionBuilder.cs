@@ -9,17 +9,63 @@ internal static class LuaFunctionBuilder
         return methods.Select(y => GenerateFunctionMethod(y, typeDictionary));
     }
 
-    public static IEnumerable<(IMethodSymbol MethodSymbol, bool IsManualMethod)> ValidateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary, SourceProductionContext context)
+    public static (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] ValidateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary, SourceProductionContext context)
     {
-        IEnumerable<(IMethodSymbol methodSymbol, bool success, bool isManualMethod)> methodGroupings = methods.Select(x =>
+        IEnumerable<(IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod, bool Success)> methodGroupings = methods.Select(x =>
         {
+            // Determine function name.
+            string functionName = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeNameArgumentName, x, typeDictionary[TypeDictionaryId.LuaFunctionAttribute], out string? customFunctionName)
+                ? customFunctionName
+                : x.Name;
+
+            // Validate the method.
             bool isMethodValid = FilterMethodSymbol(x, context, typeDictionary, out bool isManualMethod);
-            return (x, isMethodValid, isManualMethod);
+
+            // Determine the name of the method to invoke.
+            string methodName = isManualMethod
+                ? x.GetFullName()
+                : GetSafeMethodName(x);
+
+            return (x, functionName, methodName, isManualMethod, isMethodValid);
         });
 
-        return methodGroupings
-            .Where(x => x.success)
-            .Select(y => (y.methodSymbol, y.isManualMethod));
+        (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] validatedMethods = methodGroupings
+            .Where(x => x.Success)
+            .Select(y => (y.MethodSymbol, y.FunctionName, y.MethodName, y.IsManualMethod))
+            .ToArray();
+
+        return FilterMethodsWithDuplicateNames(validatedMethods, context);
+    }
+
+    /// <summary>
+    /// Filters out methods with duplicate function names, and reports diagnostics about any such methods.
+    /// </summary>
+    /// <param name="validatedMethods"></param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    private static (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] FilterMethodsWithDuplicateNames((IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] validatedMethods, SourceProductionContext context)
+    {
+        IEnumerable<(IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)> methodsWithDuplicateNames = validatedMethods
+            .GroupBy(x => x.FunctionName)
+            .Where(y => y.Count() > 1)
+            .SelectMany(z => z);
+
+        foreach ((IMethodSymbol methodSymbol, string functionName, _, _) in methodsWithDuplicateNames)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.FunctionNameNotUnique,
+                methodSymbol.Locations.FirstOrDefault(),
+                methodSymbol.Locations,
+                functionName));
+        }
+
+        IEnumerable<string> duplicateMethodNames = methodsWithDuplicateNames
+            .Select(x => x.FunctionName)
+            .Distinct();
+
+        return validatedMethods
+            .Where(x => !duplicateMethodNames.Contains(x.FunctionName))
+            .ToArray();
     }
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
@@ -223,7 +269,7 @@ internal static class LuaFunctionBuilder
     {
         bool success = true;
 
-        // Determine function name.
+        // Check if the LuaFunction attribute marks the method as manual.
         isManualMethod = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeManualArgumentName, methodSymbol, typeDictionary[TypeDictionaryId.LuaFunctionAttribute], out bool manualAttribute)
             ? manualAttribute
             : false;

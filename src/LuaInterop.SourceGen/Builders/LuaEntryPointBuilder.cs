@@ -6,20 +6,9 @@ internal static class LuaEntryPointBuilder
 {
     public static CompilationUnitSyntax CreateCompilationUnit(
         string assemblyName,
-        IMethodSymbol[] methodSymbols,
-        TypeDictionary typeDictionary,
-        SourceProductionContext context)
+        (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] validateMethods,
+        TypeDictionary typeDictionary)
     {
-        // Filter out method symbols that fail validation.
-        IEnumerable<(IMethodSymbol MethodSymbol, bool IsManualMethod)> validateMethods = LuaFunctionBuilder.ValidateFunctionMethods(methodSymbols, typeDictionary, context).ToArray();
-
-        // Todo: Disallow methods with the same names/function names.
-
-        // All validated methods (methods to be registered).
-        IMethodSymbol[] validatedMethods = validateMethods
-            .Select(x => x.MethodSymbol)
-            .ToArray();
-
         // Validated automatic methods (methods to generate function methods for).
         IMethodSymbol[] validatedAutomaticMethods = validateMethods
             .Where(x => !x.IsManualMethod)
@@ -35,7 +24,7 @@ internal static class LuaEntryPointBuilder
         ClassDeclarationSyntax classDeclaration = SF.ClassDeclaration($"{GeneratorConstants.LuaOpenClassName}_{assemblyName}")
             .WithModifiers(classAccessModifierSyntax)
             .WithMembers([
-                GenerateLuaOpenMethod(assemblyName, validatedMethods, typeDictionary),
+                GenerateLuaOpenMethod(assemblyName, validateMethods, typeDictionary),
                 .. LuaFunctionBuilder.GenerateFunctionMethods(validatedAutomaticMethods, typeDictionary)])
             .WithAttributeLists([
                 SF.AttributeList([GenerateGeneratedCodeAttributeAttribute()])])
@@ -52,7 +41,7 @@ internal static class LuaEntryPointBuilder
 
     private static MethodDeclarationSyntax GenerateLuaOpenMethod(
         string assemblyName,
-        IMethodSymbol[] methodSymbols,
+        (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] methodSymbols,
         TypeDictionary typeDictionary)
     {
         // Parameters
@@ -81,7 +70,7 @@ internal static class LuaEntryPointBuilder
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
             createTableMethodInvocation,
-            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x, typeDictionary[TypeDictionaryId.LuaFunctionAttribute])),
+            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x.MethodSymbol, x.FunctionName, x.MethodName)),
             returnStatement]);
 
         // Attribute, UnmanagedCallersOnly
@@ -113,23 +102,8 @@ internal static class LuaEntryPointBuilder
         return methodDeclaration;
     }
 
-    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, INamedTypeSymbol methodAttribute)
+    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, string functionName, string methodName)
     {
-        // Determine function name.
-        string functionName = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeNameArgumentName, methodSymbol, methodAttribute, out string? customFunctionName)
-            ? customFunctionName
-            : methodSymbol.Name;
-
-        // Check if the LuaFunction attribute marks the method as manual.
-        bool isManualMethod = TryGetAttributeValue(GeneratorConstants.LuaFunctionAttributeManualArgumentName, methodSymbol, methodAttribute, out bool manualAttribute)
-            ? manualAttribute
-            : false;
-
-        // Determine the name of the method to invoke.
-        string methodName = isManualMethod
-            ? methodSymbol.GetFullName()
-            : LuaFunctionBuilder.GetSafeMethodName(methodSymbol);
-
         // Method invocation
         return SF.ExpressionStatement(
             SF.InvocationExpression(

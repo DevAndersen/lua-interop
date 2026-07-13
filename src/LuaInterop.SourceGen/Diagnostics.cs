@@ -99,4 +99,12 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FunctionNameNotUnique = new DiagnosticDescriptor(
+        id: "LUA0012",
+        title: "Lua function name is not unique",
+        messageFormat: "Lua function name '{0}' is not unique",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

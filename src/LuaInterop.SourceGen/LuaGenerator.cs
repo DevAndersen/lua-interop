@@ -98,11 +98,13 @@ internal class LuaGenerator : IIncrementalGenerator
         // Null check to satisfy nullability analyzer.
         IMethodSymbol[] methodSymbolArray = methodSymbols.OfType<IMethodSymbol>().ToArray();
 
+        // Filter out method symbols that fail validation.
+        (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] validatedMethods = LuaFunctionBuilder.ValidateFunctionMethods(methodSymbolArray, typeDictionary, context);
+
         CompilationUnitSyntax compilationUnit = LuaEntryPointBuilder.CreateCompilationUnit(
             assemblyName,
-            methodSymbolArray,
-            typeDictionary,
-            context);
+            validatedMethods,
+            typeDictionary);
 
         SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
         context.AddSource($"{assemblyName}.g.cs", syntaxTree.GetText());

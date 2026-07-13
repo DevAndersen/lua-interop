@@ -22,20 +22,4 @@ public class LuaFunctionAttribute : Attribute
     /// and manually invoke the relevant interop helper methods to read/write data to and from Lua.
     /// </summary>
     public bool ManualFunction { get; init; }
-
-    /// <summary>
-    /// Mark the method as a Lua function, exposing it to Lua as the name of the method.
-    /// </summary>
-    public LuaFunctionAttribute()
-    {
-    }
-
-    /// <summary>
-    /// Mark the method as a Lua function, exposing it to Lua as <paramref name="functionName"/>.
-    /// </summary>
-    /// <param name="functionName"></param>
-    public LuaFunctionAttribute(string functionName)
-    {
-        FunctionName = functionName;
-    }
 }
