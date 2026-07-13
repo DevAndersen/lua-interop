@@ -6,7 +6,7 @@
 /// <remarks>
 /// The assembly must also be decorated with <see cref="LuaLibraryAttribute"/>.
 /// </remarks>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Method)]
 public class LuaFunctionAttribute : Attribute
 {
     /// <summary>
