@@ -9,7 +9,7 @@ internal class LuaGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Gather compilation data.
-        IncrementalValueProvider<CompilationData?> compilationDataProvider = context.CompilationProvider.Select(BuildCompilationData);
+        IncrementalValueProvider<CompilationData> compilationDataProvider = context.CompilationProvider.Select(BuildCompilationData);
 
         // Check for method attributes.
         IncrementalValuesProvider<IMethodSymbol?> methodProvider = context.SyntaxProvider.ForAttributeWithMetadataName(
@@ -18,7 +18,7 @@ internal class LuaGenerator : IIncrementalGenerator
             static (syntaxContext, _) => syntaxContext.TargetSymbol as IMethodSymbol);
 
         // Group methods and compilation data.
-        IncrementalValueProvider<(ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? metadata)> combinedProvider = methodProvider
+        IncrementalValueProvider<(ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData metadata)> combinedProvider = methodProvider
             .Collect()
             .Combine(compilationDataProvider);
 
@@ -26,38 +26,21 @@ internal class LuaGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(combinedProvider, BuildSource);
     }
 
-    private static CompilationData? BuildCompilationData(Compilation compilation, CancellationToken cancellationToken)
+    private static CompilationData BuildCompilationData(Compilation compilation, CancellationToken cancellationToken)
     {
-        // Attempt to resolve the type symbol for LuaLibraryAttribute.
         INamedTypeSymbol? assemblyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaLibraryAttributeFullName);
-        if (assemblyAttributeTypeSymbol == null)
-        {
-            return null; // Todo: Emit diagnostics.
-        }
-
-        // Attempt to resolve the type symbol for LuaFunctionAttribute.
         INamedTypeSymbol? methodAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.LuaFunctionAttributeFullName);
-        if (methodAttributeTypeSymbol == null)
-        {
-            return null; // Todo: Emit diagnostics.
-        }
-
-        // Attempt to resolve the type symbol for LuaFunctionAttribute.
         INamedTypeSymbol? unmanagedCallersOnlyAttributeTypeSymbol = compilation.GetTypeByMetadataName(GeneratorConstants.UnmanagedCallersOnlyAttributeFullName);
-        if (unmanagedCallersOnlyAttributeTypeSymbol == null)
-        {
-            return null; // Todo: Emit diagnostics.
-        }
 
         // Create a dictionary containing INamedTypeSymbols for commonly used types.
-        TypeDictionary typeDictionary = new TypeDictionary
+        NullableTypeDictionary typeDictionary = new NullableTypeDictionary
         {
-            [TypeDictionaryId.Int] = compilation.GetSpecialType(SpecialType.System_Int32),
-            [TypeDictionaryId.IntPtr] = compilation.GetSpecialType(SpecialType.System_IntPtr),
-            [TypeDictionaryId.Dictionary2] = GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2),
-            [TypeDictionaryId.LuaLibraryAttribute] = assemblyAttributeTypeSymbol,
-            [TypeDictionaryId.LuaFunctionAttribute] = methodAttributeTypeSymbol,
-            [TypeDictionaryId.UnmanagedCallersOnlyAttribute] = unmanagedCallersOnlyAttributeTypeSymbol
+            [TypeDictionaryId.Int] = (typeof(int).FullName, compilation.GetSpecialType(SpecialType.System_Int32)),
+            [TypeDictionaryId.IntPtr] = (typeof(nint).FullName, compilation.GetSpecialType(SpecialType.System_IntPtr)),
+            [TypeDictionaryId.Dictionary2] = (GeneratorConstants.TypeMetadataNameDictionary2, GetTypeByMetadataName(compilation, GeneratorConstants.TypeMetadataNameDictionary2)),
+            [TypeDictionaryId.LuaLibraryAttribute] = (GeneratorConstants.LuaLibraryAttributeFullName, assemblyAttributeTypeSymbol),
+            [TypeDictionaryId.LuaFunctionAttribute] = (GeneratorConstants.LuaFunctionAttributeFullName, methodAttributeTypeSymbol),
+            [TypeDictionaryId.UnmanagedCallersOnlyAttribute] = (GeneratorConstants.UnmanagedCallersOnlyAttributeFullName, unmanagedCallersOnlyAttributeTypeSymbol),
         };
 
         return new CompilationData(
@@ -66,19 +49,34 @@ internal class LuaGenerator : IIncrementalGenerator
             typeDictionary);
     }
 
-    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? metadata) data)
+    private static void BuildSource(SourceProductionContext context, (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData metadata) data)
     {
         // Deconstruct.
-        (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData? compilationData) = data;
+        (ImmutableArray<IMethodSymbol?> methodSymbols, CompilationData compilationData) = data;
+        (string? assemblyName, IAssemblySymbol assembly, NullableTypeDictionary nullableTypeDictionary) = compilationData;
 
-        // Validate compilation data.
-        if (compilationData == null)
+        // Validate type dictionary.
+        KeyValuePair<TypeDictionaryId, (string FullTypeName, INamedTypeSymbol? NamedTypeSymbol)>[] unresolvedTypes = compilationData
+            .TypeDictionary
+            .Where(x => x.Value.NamedTypeSymbol == null)
+            .ToArray();
+
+        if (unresolvedTypes.Length > 0)
         {
+            foreach (KeyValuePair<TypeDictionaryId, (string FullTypeName, INamedTypeSymbol? NamedTypeSymbol)> unresolvedType in unresolvedTypes)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.RequiredTypeMissing,
+                    null,
+                    unresolvedType.Value.FullTypeName));
+            }
+
             return;
         }
 
-        // Deconstruct compilation data.
-        (string? assemblyName, IAssemblySymbol assembly, TypeDictionary typeDictionary) = compilationData;
+        TypeDictionary typeDictionary = compilationData.TypeDictionary.ToDictionary(
+            x => x.Key,
+            x => x.Value.NamedTypeSymbol!);
 
         // Validate the assembly.
         if (IsNullOrWhiteSpace(assemblyName) || !SyntaxFacts.IsValidIdentifier(assemblyName))
@@ -127,5 +125,5 @@ internal class LuaGenerator : IIncrementalGenerator
     private record CompilationData(
         string? AssemblyName,
         IAssemblySymbol Assembly,
-        TypeDictionary TypeDictionary);
+        NullableTypeDictionary TypeDictionary);
 }

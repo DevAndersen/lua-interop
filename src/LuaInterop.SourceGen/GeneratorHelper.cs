@@ -4,8 +4,6 @@ namespace LuaInterop.SourceGen;
 
 internal static class GeneratorHelper
 {
-    private const string _typeNotFoundFromMetadataNameExceptionMessageTemplate = "Unable to find type from metadata name '{0}'";
-
     /// <summary>
     /// Determines if <paramref name="typeSymbol"/>, and all containing types, are either <c>public</c> or <c>internal</c>.
     /// </summary>
@@ -49,10 +47,9 @@ internal static class GeneratorHelper
         return string.IsNullOrWhiteSpace(value);
     }
 
-    public static INamedTypeSymbol GetTypeByMetadataName(Compilation compilation, string typeMetadataName)
+    public static INamedTypeSymbol? GetTypeByMetadataName(Compilation compilation, string typeMetadataName)
     {
-        return compilation.GetTypeByMetadataName(typeMetadataName)
-            ?? throw new Exception(string.Format(_typeNotFoundFromMetadataNameExceptionMessageTemplate, typeMetadataName)); // Todo: Emit diagnostics instead of throwing exception.
+        return compilation.GetTypeByMetadataName(typeMetadataName);
     }
 
     /// <summary>

@@ -115,4 +115,12 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor RequiredTypeMissing = new DiagnosticDescriptor(
+        id: "LUA0014",
+        title: "Failed to resolve required type",
+        messageFormat: "Failed to resolve required type '{0}'",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
