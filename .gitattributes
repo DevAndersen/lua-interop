@@ -1,0 +1,2 @@
+# Ensures that .sh scripts always have UNIX-styled line endings (CRLF can break them).
+*.sh eol=lf
