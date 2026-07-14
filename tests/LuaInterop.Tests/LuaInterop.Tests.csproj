@@ -35,7 +35,7 @@
 		<Exec Command="sh $(MSBuildProjectDirectory)/Scripts/build.sh $(OutputPath)/nativelib" />
 	</Target>
 	<Target Name="PublishNativeLibraryWindows" BeforeTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
-		<Exec Command="powershell $(MSBuildProjectDirectory)\Scripts\build.ps1 $(OutputPath)/nativelib" />
+		<Exec Command="powershell $(MSBuildProjectDirectory)\Scripts\build.ps1 $(OutputPath)\nativelib" />
 	</Target>
 
 </Project>
