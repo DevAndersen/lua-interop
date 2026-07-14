@@ -25,6 +25,7 @@ public static class LuaHelper
     {
         // language=Lua
         string fullScript = $"""
+            package.cpath = "./nativelib/?.dll;./nativelib/?.so;" .. package.cpath
             local interop = require("LuaInterop_Tests_Demo")
             {script}
             """;
