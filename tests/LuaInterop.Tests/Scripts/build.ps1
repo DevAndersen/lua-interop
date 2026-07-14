@@ -1,7 +1,10 @@
 param (
     [Parameter(Mandatory=$true)]
-    [string]$OutputPath
+    [string]$OutputPath,
+
+    [Parameter(Mandatory=$true)]
+    [string]$LuaVersion
 )
 
-Write-Host "Building native library to '$OutputPath'"
-dotnet publish ..\LuaInterop.Tests.Demo -r win-x64 -c Release -o $OutputPath
+Write-Host "Building native library to '$OutputPath' for Lua $LuaVersion"
+dotnet publish $PSScriptRoot\..\..\LuaInterop.Tests.Demo -r win-x64 -c Release -o $OutputPath -p:LuaVersion=$LuaVersion

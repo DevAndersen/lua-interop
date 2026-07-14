@@ -11,37 +11,44 @@ public static class LuaModuleInitializer
     /// <exception cref="Exception"></exception>
     public static void Initialize()
     {
-        #if !WINDOWS
-        ResolveLiblua();
-        #endif
+        ResolveLuaLibrary();
     }
 
     /// <summary>
-    /// Attempt to resolve the <c>liblua</c> library file, as the file name varies between Linux distros.
+    /// Attempt to resolve and load the installed Lua system library.
     /// </summary>
     /// <exception cref="Exception"></exception>
-    private static void ResolveLiblua()
+    internal static void ResolveLuaLibrary()
     {
         NativeLibrary.SetDllImportResolver(typeof(LuaModuleInitializer).Assembly, (name, _, _) =>
         {
-            if (name != Lua.Library)
+            if (name != Lua.LuaLibrary)
             {
                 return nint.Zero;
             }
 
             string[] potentialLibraryNames =
             [
-                "liblua.so", // Arch
-                "liblua.so.0",
-                "liblua5.5.so", // Ubuntu
+#if WINDOWS && LUA_5_5
+                "lua55.dll",
+#elif WINDOWS && LUA_5_4
+                "lua54.dll",
+#elif !WINDOWS && LUA_5_5
+                "liblua5.5.so", // Arch, Ubuntu
                 "liblua5.5.so.0",
                 "liblua-5.5.so",
                 "liblua-5.5.so.0", // Alpine
+#elif !WINDOWS && LUA_5_4
+                "liblua5.4.so", // Arch, Ubuntu
+                "liblua5.4.so.0",
+                "liblua-5.4.so",
+                "liblua-5.4.so.0", // Alpine
+#endif
             ];
 
-            foreach (string str in potentialLibraryNames)
+            foreach (string potentialLibraryName in potentialLibraryNames)
             {
-                if (NativeLibrary.TryLoad(str, out nint handle))
+                if (NativeLibrary.TryLoad(potentialLibraryName, out nint handle))
                 {
                     return handle;
                 }

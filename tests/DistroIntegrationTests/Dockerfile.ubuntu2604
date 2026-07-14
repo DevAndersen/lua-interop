@@ -4,4 +4,4 @@ COPY --parents "**.csproj" "**.slnx" "**.props" "/source"
 RUN dotnet restore "/source"
 COPY "." "/source"
 WORKDIR "/source"
-ENTRYPOINT dotnet test --verbosity normal -p:TestingPlatformShowTestsFailure=true
+ENTRYPOINT dotnet test --verbosity normal -p:TestingPlatformShowTestsFailure=true -p:LuaVersion=5.5

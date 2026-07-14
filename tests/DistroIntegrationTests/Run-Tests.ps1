@@ -1,5 +1,5 @@
 #!/bin/pwsh
-docker compose build
+docker compose -f "$PSScriptRoot\docker-compose.yml" build
 
 Write-Host -ForegroundColor Green "=== Alpine ==="
 docker run --rm -it luainterop/distrotesting:alpine

@@ -19,4 +19,16 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 	</PropertyGroup>
 
+	<!-- Lua versioning -->
+	<PropertyGroup>
+		<!-- Default Lua version -->
+		<LuaVersion Condition="'$(LuaVersion)' == ''">5.5</LuaVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(LuaVersion)' == '5.4'">
+		<DefineConstants>$(DefineConstants);LUA_5_4</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(LuaVersion)' == '5.5'">
+		<DefineConstants>$(DefineConstants);LUA_5_5</DefineConstants>
+	</PropertyGroup>
+
 </Project>
