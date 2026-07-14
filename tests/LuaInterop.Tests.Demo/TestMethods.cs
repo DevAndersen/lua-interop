@@ -1,6 +1,4 @@
-﻿using LuaInterop.Attributes;
-
-namespace LuaInterop.Tests.Demo;
+﻿namespace LuaInterop.Tests.Demo;
 
 internal class TestMethods
 {

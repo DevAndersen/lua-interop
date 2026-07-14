@@ -1,3 +1,5 @@
+global using LuaInterop.Native;
+global using System.Runtime.InteropServices;
 global using lua_Integer = long;
 global using lua_Number = double;
 global using lua_State = nint;

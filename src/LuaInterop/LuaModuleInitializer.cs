@@ -1,6 +1,3 @@
-using System.Runtime.InteropServices;
-using LuaInterop.Native;
-
 namespace LuaInterop;
 
 public static class LuaModuleInitializer

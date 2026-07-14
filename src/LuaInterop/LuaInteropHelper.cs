@@ -1,6 +1,4 @@
-﻿using LuaInterop.Native;
-
-namespace LuaInterop;
+﻿namespace LuaInterop;
 
 public static class LuaInteropHelper
 {

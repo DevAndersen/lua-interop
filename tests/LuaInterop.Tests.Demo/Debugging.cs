@@ -1,4 +1,3 @@
-using LuaInterop.Attributes;
 using System.Runtime.InteropServices;
 
 namespace LuaInterop.Tests.Demo;

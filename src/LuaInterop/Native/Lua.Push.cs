@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace LuaInterop.Native;
 
 internal static partial class Lua

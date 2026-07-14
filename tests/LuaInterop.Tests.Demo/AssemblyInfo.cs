@@ -1,3 +1,1 @@
-﻿using LuaInterop.Attributes;
-
-[assembly: LuaLibrary]
+﻿[assembly: LuaLibrary]
