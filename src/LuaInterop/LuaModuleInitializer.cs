@@ -54,7 +54,7 @@ public static class LuaModuleInitializer
                 }
             }
 
-            throw new Exception("Failed to resolve Lua library file"); // Todo: Use a more relevant exception type.
+            throw new DllNotFoundException($"Failed to resolve Lua library file, looked for [{string.Join(", ", potentialLibraryNames)}]");
         });
     }
 }
