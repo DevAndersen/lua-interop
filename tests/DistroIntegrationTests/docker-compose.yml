@@ -1,22 +1,53 @@
 services:
 
-    ubuntu2604:
-        image: luainterop/distrotesting:ubuntu2604
-        container_name: luainterop-ubuntu2604
-        build:
-            context: ../../
-            dockerfile: tests/DistroIntegrationTests/Dockerfile.ubuntu2604
+    # Lua 5.5
 
-    alpine:
-        image: luainterop/distrotesting:alpine
-        container_name: luainterop-alpine
+    # Lua 5.5, Ubuntu
+    55-ubuntu:
+        image: luainterop/distrotesting:55-ubuntu
+        container_name: luainterop-55-ubuntu
         build:
             context: ../../
-            dockerfile: tests/DistroIntegrationTests/Dockerfile.alpine
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.55-ubuntu
 
-    archlinux:
-        image: luainterop/distrotesting:archlinux
-        container_name: luainterop-archlinux
+    # Lua 5.5, Alpine
+    55-alpine:
+        image: luainterop/distrotesting:55-alpine
+        container_name: luainterop-55-alpine
         build:
             context: ../../
-            dockerfile: tests/DistroIntegrationTests/Dockerfile.archlinux
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.55-alpine
+
+    # Lua 5.5, Arch Linux
+    55-archlinux:
+        image: luainterop/distrotesting:55-archlinux
+        container_name: luainterop-55-archlinux
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.55-archlinux
+
+    # Lua 5.4
+
+    # Lua 5.4, Ubuntu
+    54-ubuntu:
+        image: luainterop/distrotesting:54-ubuntu
+        container_name: luainterop-54-ubuntu
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.54-ubuntu
+
+    # Lua 5.4, Alpine
+    54-alpine:
+        image: luainterop/distrotesting:54-alpine
+        container_name: luainterop-54-alpine
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.54-alpine
+
+    # Lua 5.4, Arch Linux
+    54-archlinux:
+        image: luainterop/distrotesting:54-archlinux
+        container_name: luainterop-54-archlinux
+        build:
+            context: ../../
+            dockerfile: tests/DistroIntegrationTests/Dockerfile.54-archlinux

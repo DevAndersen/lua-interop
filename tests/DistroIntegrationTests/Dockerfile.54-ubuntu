@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0.301-resolute
+RUN apt-get update ; apt-get install -y gcc lua5.4 liblua5.4
+COPY --parents "**.csproj" "**.slnx" "**.props" "/source"
+RUN dotnet restore "/source"
+COPY "." "/source"
+WORKDIR "/source"
+ENTRYPOINT dotnet test --verbosity normal -p:TestingPlatformShowTestsFailure=true -p:LuaVersion=5.4

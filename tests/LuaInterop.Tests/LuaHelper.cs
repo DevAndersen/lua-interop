@@ -33,15 +33,16 @@ public static class LuaHelper
         string escapedScript = fullScript.Replace("\"", "\\\"");
 
         string luaExecutableFileName;
-        if (OperatingSystem.IsWindows())
-        {
-            luaExecutableFileName = "lua";
-        }
-        else
-        {
-            // Todo: Note this down as needing to be changed if targeting a different version of Lua.
-            luaExecutableFileName = "lua5.5";
-        }
+
+#if WINDOWS && LUA_5_5
+        luaExecutableFileName = "lua55";
+#elif WINDOWS && LUA_5_4
+        luaExecutableFileName = "lua54";
+#elif !WINDOWS && LUA_5_5
+        luaExecutableFileName = "lua5.5";
+#elif !WINDOWS && LUA_5_4
+        luaExecutableFileName = "lua5.4";
+#endif
 
         Process? process = Process.Start(new ProcessStartInfo
         {
