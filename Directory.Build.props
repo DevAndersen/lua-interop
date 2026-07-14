@@ -19,6 +19,11 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 	</PropertyGroup>
 
+	<!-- Define OS constants -->
+	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		<DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+	</PropertyGroup>
+
 	<!-- Lua versioning -->
 	<PropertyGroup>
 		<!-- Default Lua version -->
