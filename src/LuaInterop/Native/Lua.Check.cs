@@ -11,7 +11,7 @@ internal static unsafe partial class Lua
     public static partial byte* CheckLString(
         lua_State L,
         int arg,
-        out size_t len);
+        out size_t l);
 
     [LibraryImport(LuaLibrary, EntryPoint = "luaL_checkstring", StringMarshalling = StringMarshalling.Utf8)]
     public static partial byte* CheckString(

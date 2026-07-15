@@ -15,13 +15,13 @@ internal static partial class Lua
     [LibraryImport(LuaLibrary, EntryPoint = "lua_createtable")]
     public static partial void CreateTable(
         lua_State L,
-        int narr,
+        int nseq,
         int nrec);
 
     [LibraryImport(LuaLibrary, EntryPoint = "lua_setfield", StringMarshalling = StringMarshalling.Utf8)]
     public static partial void SetField(
         lua_State L,
-        int idx,
+        int index,
         string k);
 
     [LibraryImport(LuaLibrary, EntryPoint = "lua_pcallk")]

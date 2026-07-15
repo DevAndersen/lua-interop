@@ -5,7 +5,7 @@ internal static partial class Lua
     [LibraryImport(LuaLibrary, EntryPoint = "lua_pushvalue")]
     public static partial void PushValue(
         lua_State L,
-        int idx);
+        int index);
 
     [LibraryImport(LuaLibrary, EntryPoint = "lua_pushcclosure")]
     public static partial void PushCClosure(
