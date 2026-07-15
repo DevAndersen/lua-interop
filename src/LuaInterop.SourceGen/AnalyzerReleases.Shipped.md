@@ -4,7 +4,6 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-LUA9999 | LUA | Warning | Debug diagnostic
 LUA0001 | LUA | Error | Lua function must be static
 LUA0002 | LUA | Error | Lua function must be either 'public' or 'internal'
 LUA0003 | LUA | Error | Unsupported Lua function return type
