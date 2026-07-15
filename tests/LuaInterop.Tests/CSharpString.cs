@@ -9,7 +9,7 @@ internal class CSharpString
 {
     private readonly string _source;
 
-    public CSharpString([StringSyntax("csharp")]string source)
+    public CSharpString([StringSyntax("csharp")] string source)
     {
         _source = source;
     }
