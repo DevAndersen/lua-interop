@@ -107,8 +107,7 @@ internal class LuaGenerator : IIncrementalGenerator
             validatedMethods,
             typeDictionary);
 
-        SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
-        context.AddSource($"{assemblyName}.g.cs", syntaxTree.GetText());
+        AddCompilation(assemblyName, compilationUnit, context);
 
         // Determine if the module initializer class should be generated.
         bool generateModuleInitializerClass = TryGetAttributeValue(GeneratorConstants.LuaLibraryAttributeInitializerArgumentName, assembly, typeDictionary[TypeDictionaryId.LuaLibraryAttribute], out bool attributeValue)
@@ -117,9 +116,20 @@ internal class LuaGenerator : IIncrementalGenerator
 
         if (generateModuleInitializerClass)
         {
-            SyntaxTree moduleInitializerSyntaxTree = SF.SyntaxTree(ModuleInitializerBuilder.GenerateModuleInitializer().NormalizeWhitespace(), encoding: Encoding.Unicode);
-            context.AddSource($"{GeneratorConstants.ModuleInitializerClassName}.g.cs", moduleInitializerSyntaxTree.GetText());
+            AddCompilation(GeneratorConstants.ModuleInitializerClassName, ModuleInitializerBuilder.GenerateModuleInitializer(), context);
         }
+    }
+
+    /// <summary>
+    /// Adds <paramref name="compilationUnit"/> to the source output.
+    /// </summary>
+    /// <param name="hintName"></param>
+    /// <param name="compilationUnit"></param>
+    /// <param name="context"></param>
+    private static void AddCompilation(string hintName, CompilationUnitSyntax compilationUnit, SourceProductionContext context)
+    {
+        SyntaxTree syntaxTree = SF.SyntaxTree(compilationUnit.NormalizeWhitespace(), encoding: Encoding.Unicode);
+        context.AddSource($"{hintName}.g.cs", syntaxTree.GetText());
     }
 
     private record CompilationData(
