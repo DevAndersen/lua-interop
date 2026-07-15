@@ -16,7 +16,7 @@ public static class AssertExtensions
 
             bool equal = expectedIds.SequenceEqual(actualIds);
 
-            Assert.True(equal, $"Unexpected diagnostics pattern, expected [{string.Join(", ", expectedIds)}], go [{string.Join(", ", actualIds)}]");
+            Assert.True(equal, $"Unexpected diagnostics pattern, expected [{string.Join(", ", expectedIds)}], got [{string.Join(", ", actualIds)}]");
         }
     }
 }
