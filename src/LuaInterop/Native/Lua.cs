@@ -3,8 +3,11 @@
 // ReSharper disable UseSymbolAlias
 // ReSharper disable StringLiteralTypo
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace LuaInterop.Native;
 
+[SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "P/Invoke method signatures should match that of the corresponding native code")]
 internal static partial class Lua
 {
     /// <remarks>

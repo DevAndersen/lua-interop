@@ -20,6 +20,8 @@ public static class LuaReadHelper
 
     public static long ReadLong(nint luaStatePtr, int argumentIndex, string parameterName)
     {
+        _ = parameterName; // Todo: Type check, throw exception with parameter name if bad data.
+
         return Lua.CheckInteger(luaStatePtr, argumentIndex);
     }
 
@@ -40,6 +42,8 @@ public static class LuaReadHelper
 
     public static double ReadDouble(nint luaStatePtr, int argumentIndex, string parameterName)
     {
+        _ = parameterName; // Todo: Type check, throw exception with parameter name if bad data.
+
         return Lua.CheckNumber(luaStatePtr, argumentIndex);
     }
 
@@ -56,6 +60,8 @@ public static class LuaReadHelper
 
     public static bool? ReadNullableBoolean(nint luaStatePtr, int argumentIndex, string parameterName)
     {
+        _ = parameterName; // Todo: Unnecessary parameter, but makes source generation easier.
+
         return ReadNullable(luaStatePtr, argumentIndex, Lua.ToBoolean);
     }
 

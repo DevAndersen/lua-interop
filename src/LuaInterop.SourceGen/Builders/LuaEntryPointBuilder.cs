@@ -70,7 +70,7 @@ internal static class LuaEntryPointBuilder
         // Method statements
         SyntaxList<StatementSyntax> statementList = SF.List<StatementSyntax>([
             createTableMethodInvocation,
-            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x.MethodSymbol, x.FunctionName, x.MethodName)),
+            .. methodSymbols.Select(x => GenerateRegisterFunctionInvocation(x.FunctionName, x.MethodName)),
             returnStatement]);
 
         // Attribute, UnmanagedCallersOnly
@@ -102,7 +102,7 @@ internal static class LuaEntryPointBuilder
         return methodDeclaration;
     }
 
-    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(IMethodSymbol methodSymbol, string functionName, string methodName)
+    private static ExpressionStatementSyntax GenerateRegisterFunctionInvocation(string functionName, string methodName)
     {
         // Method invocation
         return SF.ExpressionStatement(

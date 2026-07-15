@@ -335,7 +335,7 @@ internal static class LuaFunctionBuilder
             }
         }
 
-        var methodKindValidation = isManualMethod
+        bool methodKindValidation = isManualMethod
             ? FilterManualMethodSymbol(methodSymbol, context, typeDictionary)
             : FilterAutomaticMethodSymbol(methodSymbol, context, typeDictionary);
 
@@ -382,12 +382,13 @@ internal static class LuaFunctionBuilder
         // Disallow unsupported return types.
         if (IsReturnTypeUnsupported(methodSymbol, typeDictionary))
         {
+            // Todo: Clean up.
             INamedTypeSymbol v1 = typeDictionary.GetOrThrow(TypeDictionaryId.Dictionary2);
             INamedTypeSymbol v2 = methodSymbol.ReturnType.OriginalDefinition as INamedTypeSymbol ?? throw new Exception();
 
             bool b = methodSymbol.ReturnType.AllInterfaces.Select(x => x.OriginalDefinition).Contains(v1, SymbolEqualityComparer.Default);
 
-            var v3 = methodSymbol.ReturnType.OriginalDefinition.Equals(v1.OriginalDefinition, SymbolEqualityComparer.Default);
+            bool v3 = methodSymbol.ReturnType.OriginalDefinition.Equals(v1.OriginalDefinition, SymbolEqualityComparer.Default);
 
             if (methodSymbol.ReturnType.OriginalDefinition.Equals(v1, SymbolEqualityComparer.Default))
             {
@@ -470,7 +471,7 @@ internal static class LuaFunctionBuilder
     {
         if (symbol.ContainingSymbol != null)
         {
-            foreach (var containingSymbol in GetNamedSymbolHierarchy(symbol.ContainingSymbol))
+            foreach (ISymbol containingSymbol in GetNamedSymbolHierarchy(symbol.ContainingSymbol))
             {
                 if (containingSymbol is ITypeSymbol or INamespaceSymbol { Name.Length: > 0 })
                 {
