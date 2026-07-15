@@ -59,14 +59,14 @@ public static class LuaModuleInitializer
         else if (OperatingSystem.IsLinux())
         {
 #if LUA_5_5
-            yield return "liblua5.5.so"; // Arch, Ubuntu
-            yield return "liblua5.5.so.0";
-            yield return "liblua-5.5.so";
+            yield return "liblua5.5.so"; // Arch, Debian
+            yield return "liblua5.5.so.0"; // OpenSUSE
+            yield return "liblua-5.5.so"; // Fedora
             yield return "liblua-5.5.so.0"; // Alpine
 #elif LUA_5_4
-            yield return "liblua5.4.so"; // Arch, Ubuntu
-            yield return "liblua5.4.so.0";
-            yield return "liblua-5.4.so";
+            yield return "liblua5.4.so"; // Arch, Debian
+            yield return "liblua5.4.so.0"; // OpenSUSE
+            yield return "liblua-5.4.so"; // Fedora
             yield return "liblua-5.4.so.0"; // Alpine
 #else
             throw new NotSupportedException("Lua library name not defined for the specified version of Lua");
