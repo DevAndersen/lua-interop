@@ -32,19 +32,7 @@ public static class LuaHelper
 
         string escapedScript = fullScript.Replace("\"", "\\\"");
 
-        string? luaExecutableFileName;
-
-#if WINDOWS && LUA_5_5
-        luaExecutableFileName = "lua55";
-#elif WINDOWS && LUA_5_4
-        luaExecutableFileName = "lua54";
-#elif !WINDOWS && LUA_5_5
-        luaExecutableFileName = "lua5.5";
-#elif !WINDOWS && LUA_5_4
-        luaExecutableFileName = "lua5.4";
-#else
-        luaExecutableFileName = null;
-#endif
+        string luaExecutableFileName = GetLuaExecutableName();
 
         Process? process = Process.Start(new ProcessStartInfo
         {
@@ -81,5 +69,39 @@ public static class LuaHelper
     public record ProcessResult(int ExitCode, string StandardOutput, string StandardError)
     {
         public bool IsSuccessful => ExitCode == 0 && StandardError.Length == 0;
+    }
+
+    /// <summary>
+    /// Returns the name of the Lua executable.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    private static string GetLuaExecutableName()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+#if LUA_5_5
+            return "lua55";
+#elif LUA_5_4
+            return "lua54";
+#else
+            throw new NotSupportedException("Lua executable name not defined for the specified version of Lua");
+#endif
+        }
+        else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+#if LUA_5_5
+            return "lua5.5";
+#elif LUA_5_4
+            return "lua5.4";
+#else
+            throw new NotSupportedException("Lua executable name not defined for the specified version of Lua");
+#endif
+        }
+        else
+        {
+            throw new PlatformNotSupportedException("Operating system not supported");
+        }
     }
 }

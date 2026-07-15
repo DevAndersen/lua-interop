@@ -31,11 +31,11 @@
 	</ItemGroup>
 
 	<!-- Pre-test build steps -->
-	<Target Name="PublishNativeLibraryUnix" BeforeTargets="Build" Condition="'$(OS)' == 'Unix'">
-		<Exec Command="sh $(MSBuildProjectDirectory)/Scripts/build.sh '$(OutputPath)nativelib' '$(LuaVersion)'" />
-	</Target>
 	<Target Name="PublishNativeLibraryWindows" BeforeTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
 		<Exec Command="powershell $(MSBuildProjectDirectory)\Scripts\build.ps1 -OutputPath '$(OutputPath)nativelib' -LuaVersion '$(LuaVersion)'" />
+	</Target>
+	<Target Name="PublishNativeLibraryUnix" BeforeTargets="Build" Condition="'$(OS)' == 'Unix'">
+		<Exec Command="sh $(MSBuildProjectDirectory)/Scripts/build.sh '$(OutputPath)nativelib' '$(LuaVersion)'" />
 	</Target>
 
 </Project>

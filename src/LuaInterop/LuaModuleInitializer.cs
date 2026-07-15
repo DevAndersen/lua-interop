@@ -24,24 +24,7 @@ public static class LuaModuleInitializer
                 return nint.Zero;
             }
 
-            string[] potentialLibraryNames =
-            [
-#if WINDOWS && LUA_5_5
-                "lua55.dll",
-#elif WINDOWS && LUA_5_4
-                "lua54.dll",
-#elif !WINDOWS && LUA_5_5
-                "liblua5.5.so", // Arch, Ubuntu
-                "liblua5.5.so.0",
-                "liblua-5.5.so",
-                "liblua-5.5.so.0", // Alpine
-#elif !WINDOWS && LUA_5_4
-                "liblua5.4.so", // Arch, Ubuntu
-                "liblua5.4.so.0",
-                "liblua-5.4.so",
-                "liblua-5.4.so.0", // Alpine
-#endif
-            ];
+            IEnumerable<string> potentialLibraryNames = GetLuaLibraryNames();
 
             foreach (string potentialLibraryName in potentialLibraryNames)
             {
@@ -53,5 +36,55 @@ public static class LuaModuleInitializer
 
             throw new DllNotFoundException($"Failed to resolve Lua library file, looked for [{string.Join(", ", potentialLibraryNames)}]");
         });
+    }
+
+    /// <summary>
+    /// Returns potential names for the Lua library file.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="PlatformNotSupportedException"></exception>
+    private static IEnumerable<string> GetLuaLibraryNames()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+#if LUA_5_5
+            yield return "lua55.dll";
+#elif LUA_5_4
+            yield return "lua54.dll";
+#else
+            throw new NotSupportedException("Lua library name not defined for the specified version of Lua");
+#endif
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+#if LUA_5_5
+            yield return "liblua5.5.so"; // Arch, Ubuntu
+            yield return "liblua5.5.so.0";
+            yield return "liblua-5.5.so";
+            yield return "liblua-5.5.so.0"; // Alpine
+#elif LUA_5_4
+            yield return "liblua5.4.so"; // Arch, Ubuntu
+            yield return "liblua5.4.so.0";
+            yield return "liblua-5.4.so";
+            yield return "liblua-5.4.so.0"; // Alpine
+#else
+            throw new NotSupportedException("Lua library name not defined for the specified version of Lua");
+#endif
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+#if LUA_5_5
+            yield return "liblua5.5.dylib";
+#elif LUA_5_4
+            yield return "liblua5.4.dylib";
+#else
+            throw new NotSupportedException("Lua library name not defined for the specified version of Lua");
+#endif
+        }
+        else
+        {
+            throw new PlatformNotSupportedException("Operating system not supported");
+        }
     }
 }
