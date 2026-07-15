@@ -118,7 +118,7 @@ public class ParameterTests
             """);
 
         // Assert
-        Assert.True(!result.IsSuccessful); // Todo: Check if the error is the exception being thrown, not Lua itself failing.
+        Assert.False(result.IsSuccessful); // Todo: Check if the error is the exception being thrown, not Lua itself failing.
     }
 
     [Theory]
