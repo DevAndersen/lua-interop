@@ -41,7 +41,7 @@ public static class LuaInteropHelper
 
         if (statusCode != LuaStatusCode.LUA_OK)
         {
-            LuaType err = Lua.Type(luaStatePtr, -1); // Todo: Check if there's an error object, and include it in the exception message.
+            LuaType errorObjectType = Lua.Type(luaStatePtr, -1); // Todo: Check if there's an error object, and include it in the exception message.
             throw new Exception($"{functionName} called Lua function which returned status code {statusCode}"); // Todo: Find an appropriate exception type.
         }
     }
