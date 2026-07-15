@@ -32,7 +32,7 @@ public static class LuaHelper
 
         string escapedScript = fullScript.Replace("\"", "\\\"");
 
-        string luaExecutableFileName;
+        string? luaExecutableFileName;
 
 #if WINDOWS && LUA_5_5
         luaExecutableFileName = "lua55";
@@ -42,11 +42,13 @@ public static class LuaHelper
         luaExecutableFileName = "lua5.5";
 #elif !WINDOWS && LUA_5_4
         luaExecutableFileName = "lua5.4";
+#else
+        luaExecutableFileName = null;
 #endif
 
         Process? process = Process.Start(new ProcessStartInfo
         {
-            FileName = luaExecutableFileName,
+            FileName = luaExecutableFileName ?? throw new Exception("Lua executable not defined"),
             Arguments = $"-e \"{escapedScript}\"",
             UseShellExecute = false,
             RedirectStandardOutput = true,
