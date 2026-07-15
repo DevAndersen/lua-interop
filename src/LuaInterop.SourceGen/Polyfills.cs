@@ -65,6 +65,9 @@ namespace System
     /// <summary>
     /// Makes index syntax work on .NET Standard 2.0.
     /// </summary>
+    /// <remarks>
+    /// Implementation copied from <seealso href="https://github.com/dotnet/dotnet/blob/main/src/runtime/src/libraries/System.Private.CoreLib/src/System/Index.cs"/>.
+    /// </remarks>
     internal readonly struct Index
     {
         private readonly int _value;
