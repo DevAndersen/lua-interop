@@ -5,7 +5,7 @@ public static class AssertExtensions
     extension(Assert)
     {
         /// <summary>
-        /// Verifies that <paramref name="diagnostics"/> contains the expected <paramref name="diagnosticsIds"/> exactly.
+        /// Verifies that <paramref name="diagnostics"/> contains the expected <paramref name="diagnosticsIds"/> exactly (regardless of order).
         /// </summary>
         /// <param name="diagnostics"></param>
         /// <param name="diagnosticsIds"></param>
