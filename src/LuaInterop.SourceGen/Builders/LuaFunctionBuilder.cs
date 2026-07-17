@@ -1,4 +1,5 @@
-﻿using static LuaInterop.SourceGen.GeneratorHelper;
+﻿using System.Reflection.Metadata;
+using static LuaInterop.SourceGen.GeneratorHelper;
 
 namespace LuaInterop.SourceGen.Builders;
 
@@ -70,6 +71,11 @@ internal static class LuaFunctionBuilder
 
     private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, string functionName, TypeDictionary typeDictionary)
     {
+        if (functionName == "ReadWriteNullableString")
+        {
+
+        }
+
         string containingTypeFullName = methodSymbol.ContainingType.GetFullName();
         (LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)[] argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead).ToArray();
 
@@ -234,6 +240,14 @@ internal static class LuaFunctionBuilder
 
             // Todo: If the nested call returns null, return null, in order to avoid returning broken method names for unmappable types.
             return "TODO_NULLABLE_" + GetReadMethodName(argumentType); // Todo: Debug example
+        }
+
+        if (typeSymbol.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            if (typeSymbol.SpecialType == SpecialType.System_String)
+            {
+                return "ReadNullableString";
+            }
         }
 
         return typeSymbol switch

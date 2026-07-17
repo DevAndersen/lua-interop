@@ -4,6 +4,11 @@ namespace LuaInterop;
 
 public static class LuaReadHelper
 {
+    public static string? ReadNullableString(nint luaStatePtr, int argumentIndex, string parameterName)
+    {
+        return ReadNullableReferenceType(luaStatePtr, argumentIndex, parameterName, ReadString);
+    }
+
     // Todo: Version of "ReadString" that supports null, maybe a class version of "ReadNullable"?
     public static unsafe string ReadString(nint luaStatePtr, int argumentIndex, string parameterName)
     {
@@ -62,7 +67,7 @@ public static class LuaReadHelper
     {
         _ = parameterName; // Todo: Unnecessary parameter, but makes source generation easier.
 
-        return ReadNullable(luaStatePtr, argumentIndex, Lua.ToBoolean);
+        return ReadNullableValueType(luaStatePtr, argumentIndex, Lua.ToBoolean);
     }
 
     public static int GetTop(nint luaStatePtr)
@@ -80,14 +85,14 @@ public static class LuaReadHelper
     }
 
     /// <summary>
-    /// Reads the argument at <paramref name="argumentIndex"/>, with support for reading <c>null</c>.
+    /// Reads the value type argument at <paramref name="argumentIndex"/>, with support for reading <c>null</c>.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="luaStatePtr"></param>
     /// <param name="argumentIndex"></param>
     /// <param name="nonNullableFunc"></param>
     /// <returns></returns>
-    private static T? ReadNullable<T>(nint luaStatePtr, int argumentIndex, Func<nint, int, T> nonNullableFunc) where T : struct
+    private static T? ReadNullableValueType<T>(nint luaStatePtr, int argumentIndex, Func<nint, int, T> nonNullableFunc) where T : struct
     {
         if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
         {
@@ -95,6 +100,25 @@ public static class LuaReadHelper
         }
 
         return nonNullableFunc(luaStatePtr, argumentIndex);
+    }
+
+    /// <summary>
+    /// Reads the reference type argument at <paramref name="argumentIndex"/>, with support for reading <c>null</c>.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="luaStatePtr"></param>
+    /// <param name="argumentIndex"></param>
+    /// <param name="parameterName"></param>
+    /// <param name="nonNullableFunc"></param>
+    /// <returns></returns>
+    private static T? ReadNullableReferenceType<T>(nint luaStatePtr, int argumentIndex, string parameterName, Func<nint, int, string, T> nonNullableFunc) where T : class
+    {
+        if (Lua.Type(luaStatePtr, argumentIndex) == LuaType.LUA_TNIL)
+        {
+            return null;
+        }
+
+        return nonNullableFunc(luaStatePtr, argumentIndex, parameterName);
     }
 
     /// <summary>

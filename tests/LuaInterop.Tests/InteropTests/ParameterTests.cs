@@ -6,6 +6,7 @@ public class ParameterTests
 {
     private const string _luaBoolean = "boolean";
     private const string _luaNil = "nil";
+    private const string _luaString = "string";
 
     [Theory]
     [InlineData(0, 0, 0)]
@@ -123,11 +124,10 @@ public class ParameterTests
     }
 
     [Theory]
-    [InlineData(null)] // Todo: Check if the error is the exception being thrown, not Lua itself failing.
     [InlineData("")]
     [InlineData("abc")]
     [InlineData("?!$#([{}]})='.;--`")]
-    public async Task ReadWriteNullableString_ReturnsExpectedValue(string? value)
+    public async Task ReadWriteNullableString_NotNullValue_ReturnsExpectedValue(string? value)
     {
         // Act
         LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
@@ -142,6 +142,24 @@ public class ParameterTests
         // Assert
         Assert.True(result.IsSuccessful, result.StandardError);
         Assert.Equal(value, result.StandardOutput.Trim(Environment.NewLine));
+    }
+
+    [Fact]
+    public async Task ReadWriteNullableString_NullValue_ReturnsExpectedValue()
+    {
+        // Act
+        LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
+            -- Act
+            local result = interop.ReadWriteNullableString({ToLua<string?>(null)})
+
+            -- Assert
+            assert(type(result) == "nil")
+            print(result)
+            """);
+
+        // Assert
+        Assert.True(result.IsSuccessful, result.StandardError);
+        Assert.Equal(_luaNil, result.StandardOutput.Trim(Environment.NewLine));
     }
 
     [Fact]
