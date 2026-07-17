@@ -323,10 +323,23 @@ internal static class LuaFunctionBuilder
 
         foreach (IParameterSymbol parameter in methodSymbol.Parameters)
         {
+            // Disallow refkind parameters.
             if (parameter.RefKind != RefKind.None)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     Diagnostics.FunctionMarkedAsRef,
+                    parameter.Locations.FirstOrDefault(),
+                    parameter.Locations,
+                    parameter.RefKind));
+
+                success = false;
+            }
+
+            // Disallow params parameters.
+            if (parameter.IsParams)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.ParamsParameter,
                     parameter.Locations.FirstOrDefault(),
                     parameter.Locations,
                     parameter.RefKind));

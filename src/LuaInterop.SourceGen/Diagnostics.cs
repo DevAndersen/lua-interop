@@ -115,4 +115,12 @@ internal static class Diagnostics
         category: _category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ParamsParameter = new DiagnosticDescriptor(
+        id: "LUA0015",
+        title: "Lua function parameter cannot be marked as params",
+        messageFormat: "Lua function parameter cannot be marked as params",
+        category: _category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
