@@ -4,9 +4,9 @@ namespace LuaInterop.SourceGen.Builders;
 
 internal static class LuaFunctionBuilder
 {
-    public static IEnumerable<MethodDeclarationSyntax> GenerateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary)
+    public static IEnumerable<MethodDeclarationSyntax> GenerateFunctionMethods((IMethodSymbol MethodSymbol, string FunctionName)[] methods, TypeDictionary typeDictionary)
     {
-        return methods.Select(y => GenerateFunctionMethod(y, typeDictionary));
+        return methods.Select(x => GenerateFunctionMethod(x.MethodSymbol, x.FunctionName, typeDictionary));
     }
 
     public static (IMethodSymbol MethodSymbol, string FunctionName, string MethodName, bool IsManualMethod)[] ValidateFunctionMethods(IMethodSymbol[] methods, TypeDictionary typeDictionary, SourceProductionContext context)
@@ -68,7 +68,7 @@ internal static class LuaFunctionBuilder
             .ToArray();
     }
 
-    private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, TypeDictionary typeDictionary)
+    private static MethodDeclarationSyntax GenerateFunctionMethod(IMethodSymbol methodSymbol, string functionName, TypeDictionary typeDictionary)
     {
         string containingTypeFullName = methodSymbol.ContainingType.GetFullName();
         (LocalDeclarationStatementSyntax StatementSyntax, string ArgumentName)[] argumentReads = methodSymbol.Parameters.Select(GenerateParameterRead).ToArray();
@@ -119,6 +119,7 @@ internal static class LuaFunctionBuilder
 
         // Method statements
         StatementSyntax?[] statements = [
+            .. GenerateValidationStatements(methodSymbol, functionName),
             .. argumentReads.Select(x => x.StatementSyntax),
             methodInvocation,
             returnStatement
@@ -138,6 +139,20 @@ internal static class LuaFunctionBuilder
                 SF.AttributeList([unmanagedCallersOnlyAttribute])]);
 
         return methodDeclaration;
+    }
+
+    private static IEnumerable<StatementSyntax> GenerateValidationStatements(IMethodSymbol methodSymbol, string functionName)
+    {
+        int parameterCount = methodSymbol.Parameters.Count();
+        yield return SF.ExpressionStatement(SF.InvocationExpression(
+            SF.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SF.IdentifierName(GeneratorConstants.LuaReadHelperTypeGlobalFullName),
+                SF.IdentifierName(GeneratorConstants.LuaReadHelperParameterCountMethodName)),
+            SF.ArgumentList([
+                SF.Argument(SF.IdentifierName(GeneratorConstants.LuaStateVariableName)),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.NumericLiteralExpression, SF.Literal(parameterCount))),
+                SF.Argument(SF.LiteralExpression(SyntaxKind.StringLiteralExpression, SF.Literal(functionName)))])));
     }
 
     private static (LocalDeclarationStatementSyntax statementSyntax, string argumentName) GenerateParameterRead(IParameterSymbol parameter, int index)

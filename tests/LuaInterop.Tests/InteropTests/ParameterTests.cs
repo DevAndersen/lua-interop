@@ -46,6 +46,7 @@ public class ParameterTests
 
         // Assert
         Assert.False(result.IsSuccessful);
+        Assert.Contains("Incorrect number of parameters passed to Lua function", result.StandardError);
     }
 
     [Theory]
@@ -143,15 +144,13 @@ public class ParameterTests
         Assert.Equal(value, result.StandardOutput.Trim(Environment.NewLine));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ReadStringWithNullCharacter_ReturnsStringWithNullCharacter(bool value)
+    [Fact]
+    public async Task ReadStringWithNullCharacter_ReturnsStringWithNullCharacter()
     {
         // Act
         LuaHelper.ProcessResult result = await LuaHelper.RunLuaScriptResultAsync($"""
             -- Act
-            local result = interop.ReadStringWithNullCharacter({ToLua(value)})
+            local result = interop.ReadStringWithNullCharacter()
 
             -- Assert
             assert(type(result) == "string")

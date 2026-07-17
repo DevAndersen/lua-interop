@@ -10,9 +10,9 @@ internal static class LuaEntryPointBuilder
         TypeDictionary typeDictionary)
     {
         // Validated automatic methods (methods to generate function methods for).
-        IMethodSymbol[] validatedAutomaticMethods = validateMethods
+        (IMethodSymbol MethodSymbol, string FunctionName)[] validatedAutomaticMethods = validateMethods
             .Where(x => !x.IsManualMethod)
-            .Select(x => x.MethodSymbol)
+            .Select(x => (x.MethodSymbol, x.FunctionName))
             .ToArray();
 
         // Class access modifiers

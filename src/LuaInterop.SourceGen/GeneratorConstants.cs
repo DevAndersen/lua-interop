@@ -20,6 +20,7 @@ internal static class GeneratorConstants
     public const string LuaInteropHelperRegisterFunctionMethodName = "RegisterFunction";
     public const string LuaFunctionAttributeNameArgumentName = "FunctionName";
     public const string LuaFunctionAttributeManualArgumentName = "ManualFunction";
+    public const string LuaReadHelperParameterCountMethodName = "ThrowIfUnexpectedParameterCount";
 
     // Generator
     public const string GeneratedCodeNamespace = "LuaInterop.Generated";

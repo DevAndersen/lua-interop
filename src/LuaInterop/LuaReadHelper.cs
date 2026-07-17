@@ -70,6 +70,15 @@ public static class LuaReadHelper
         return Lua.GetTop(luaStatePtr);
     }
 
+    public static void ThrowIfUnexpectedParameterCount(nint luaStatePtr, int expectedParameterCount, string luaFunctionName)
+    {
+        int actualParameterCount = GetTop(luaStatePtr);
+        if (actualParameterCount != expectedParameterCount)
+        {
+            throw new ArgumentException($"Incorrect number of parameters passed to Lua function '{luaFunctionName}', expected {expectedParameterCount} got {actualParameterCount}.");
+        }
+    }
+
     /// <summary>
     /// Reads the argument at <paramref name="argumentIndex"/>, with support for reading <c>null</c>.
     /// </summary>
