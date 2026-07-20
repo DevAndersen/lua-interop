@@ -22,7 +22,7 @@ internal static class CompilationHelper
             [CSharpSyntaxTree.ParseText(csharp)],
             [
                 MetadataReference.CreateFromFile(typeof(int).GetTypeInfo().Assembly.Location),
-                MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
+                MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location), // Cannot be resolved logically (its types are actually located in CoreLib).
                 MetadataReference.CreateFromFile(typeof(LuaLibraryAttribute).GetTypeInfo().Assembly.Location)
             ],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, allowUnsafe: true));

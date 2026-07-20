@@ -5,6 +5,9 @@ namespace LuaInterop.Tests;
 /// <summary>
 /// Helper class to provide syntax highlight for strings of C# source code.
 /// </summary>
+/// <remarks>
+/// Seemingly only supported by JetBrains Rider.
+/// </remarks>
 internal class CSharpString
 {
     private readonly string _source;

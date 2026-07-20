@@ -5,6 +5,12 @@ namespace LuaInterop.Tests;
 
 public static class LuaHelper
 {
+    /// <summary>
+    /// Used to enforce Lua syntax highlighting for strings of Lua code.
+    /// </summary>
+    /// <remarks>
+    /// Seemingly only supported by JetBrains Rider.
+    /// </remarks>
     private const string _luaSyntaxName = "Lua";
 
     public static async Task<string> RunScriptAsync([StringSyntax(_luaSyntaxName)] string script, int timeoutInSeconds = 3)
@@ -23,6 +29,7 @@ public static class LuaHelper
 
     public static async Task<ProcessResult> RunLuaScriptResultAsync([StringSyntax(_luaSyntaxName)] string script, int timeoutInSeconds = 3)
     {
+        // Prepends all test Lua scripts with code that loads the AOT-compiled library.
         // language=Lua
         string fullScript = $"""
             package.cpath = "./nativelib/?.dll;./nativelib/?.so;" .. package.cpath
